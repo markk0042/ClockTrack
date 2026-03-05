@@ -1339,8 +1339,8 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const PW = 297;
   const PH = 210;
-  const ML = 10;
-  const MR = 10;
+  const ML = 14;
+  const MR = 14;
   const usableW = PW - ML - MR;
   const COLS = [
     'Date',
@@ -1352,16 +1352,10 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     'Net Hours',
     'Notes',
   ];
-  const CW = [
-    30,
-    14,
-    18,
-    18,
-    18,
-    14,
-    20,
-    usableW - 30 - 14 - 18 - 18 - 18 - 14 - 20,
-  ];
+  const fixedColWidths = [30, 14, 18, 18, 18, 14, 20];
+  const totalFixedWidth = fixedColWidths.reduce((a, b) => a + b, 0);
+  const notesWidth = usableW - totalFixedWidth - 8; // keep extra right margin, but give notes more space
+  const CW = [...fixedColWidths, notesWidth];
 
   let pageNum = 1;
 
@@ -1636,20 +1630,7 @@ const Reports = ({ staff, logs }) => {
   });
   const [rangeEnd, setRangeEnd] = useState(getDateStr(new Date()));
   const [generating, setGenerating] = useState(false);
-  const [jsPDFReady, setJsPDFReady] = useState(!!window.jspdf);
   const LUNCH = 30;
-
-  useEffect(() => {
-    if (window.jspdf) {
-      setJsPDFReady(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src =
-      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    script.onload = () => setJsPDFReady(true);
-    document.head.appendChild(script);
-  }, []);
 
   const activeDates = useMemo(() => {
     if (mode === 'week') return getWeekDates(new Date(`${weekBase}T12:00:00`));
@@ -1717,16 +1698,18 @@ const Reports = ({ staff, logs }) => {
 
   const invalidRange = mode === 'range' && rangeStart > rangeEnd;
   const canGenerate =
-    jsPDFReady &&
-    !generating &&
-    activeDates.length > 0 &&
-    !invalidRange &&
-    summary.length > 0;
+    !generating && activeDates.length > 0 && !invalidRange && summary.length > 0;
 
   const handleDownload = async () => {
     setGenerating(true);
     await new Promise((r) => setTimeout(r, 50));
     try {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        // eslint-disable-next-line no-alert
+        alert('PDF library is not available. Please refresh the page and try again.');
+        setGenerating(false);
+        return;
+      }
       buildPDF(summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, LUNCH);
     } catch (e) {
       // eslint-disable-next-line no-alert
@@ -2060,10 +2043,6 @@ const Reports = ({ staff, logs }) => {
               {generating ? (
                 <>
                   <Spinner /> Building PDF…
-                </>
-              ) : !jsPDFReady ? (
-                <>
-                  <Spinner /> Loading PDF library…
                 </>
               ) : (
                 <>
