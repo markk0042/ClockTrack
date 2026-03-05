@@ -132,9 +132,7 @@ export default function App() {
           </div>
           <div>
             <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 15 }}>ClockTrack</div>
-            <div style={{ color: '#64748b', fontSize: 11 }}>
-              Staff Attendance System · Demo Mode
-            </div>
+            <div style={{ color: '#64748b', fontSize: 11 }}>Staff Attendance System</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
