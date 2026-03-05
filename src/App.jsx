@@ -1356,6 +1356,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
   const totalFixedWidth = fixedColWidths.reduce((a, b) => a + b, 0);
   const notesWidth = usableW - totalFixedWidth - 8; // keep extra right margin, but give notes more space
   const CW = [...fixedColWidths, notesWidth];
+  const TABLE_W = usableW; // table stays within margins for equal left/right white space
 
   let pageNum = 1;
 
@@ -1366,31 +1367,29 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     doc.text(`Generated: ${new Date().toLocaleString('en-IE')}`, ML, PH - 5);
   };
 
-  const drawHeader = (title, subtitle) => {
-    doc.setFillColor(15, 23, 42);
+  const rightEdge = ML + usableW - 5; // summary text ends here for cleaner reading
+
+  const drawHeader = (title) => {
+    // Light header bar for easier reading
+    doc.setFillColor(241, 245, 249); // light slate
     doc.rect(0, 0, PW, 20, 'F');
 
-    doc.setFillColor(59, 130, 246);
+    doc.setFillColor(148, 163, 184); // subtle accent stripe
     doc.rect(0, 20, PW, 1.5, 'F');
 
-    doc.setTextColor(241, 245, 249);
+    doc.setTextColor(15, 23, 42); // dark text
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('ClockTrack — Attendance Report', ML, 9);
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(148, 163, 184);
-    doc.text(subtitle, ML, 15);
-
-    doc.setTextColor(96, 165, 250);
-    doc.text(title, PW - MR, 9, { align: 'right' });
+    doc.setTextColor(37, 99, 235); // blue title on the right
+    doc.text(title, rightEdge, 9, { align: 'right' });
   };
 
   const drawTableHeader = (y) => {
-    doc.setFillColor(30, 41, 59);
-    doc.rect(ML, y, usableW, 7, 'F');
-    doc.setTextColor(100, 116, 139);
+    doc.setFillColor(226, 232, 240); // light header band
+    doc.rect(ML, y, TABLE_W, 7, 'F');
+    doc.setTextColor(71, 85, 105); // darker header text
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
 
@@ -1405,8 +1404,8 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
 
   const drawRow = (y, vals, shade, isWeekend) => {
     if (shade) {
-      doc.setFillColor(20, 30, 48);
-      doc.rect(ML, y, usableW, 6, 'F');
+      doc.setFillColor(248, 250, 252); // very light alternating row
+      doc.rect(ML, y, TABLE_W, 6, 'F');
     }
 
     doc.setFont('helvetica', 'normal');
@@ -1435,47 +1434,42 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
   };
 
   const drawStaffHeader = (y, s, totalDays, grossMins, netMins) => {
-    doc.setFillColor(17, 34, 64);
-    doc.rect(ML, y, usableW, 8, 'F');
-    doc.setFillColor(59, 130, 246);
+    doc.setFillColor(219, 234, 254); // soft blue bar
+    doc.rect(ML, y, TABLE_W, 8, 'F');
+    doc.setFillColor(59, 130, 246); // blue accent strip
     doc.rect(ML, y, 2, 8, 'F');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
-    doc.setTextColor(241, 245, 249);
+    doc.setTextColor(15, 23, 42); // dark name text
     doc.text(s.name, ML + 5, y + 5.5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
+    doc.setTextColor(100, 116, 139); // softer subtitle
+    const nameGap = 10; // space between name and company · department
     doc.text(
       `${s.company || ''}  ·  ${s.department || ''}`,
-      ML + 5 + doc.getTextWidth(s.name) + 4,
+      ML + 5 + doc.getTextWidth(s.name) + nameGap,
       y + 5.5,
     );
-
-    const sumStr = `Days: ${totalDays}   Gross: ${fmtHours(
-      grossMins,
-    )}   Lunch: −${totalDays * LUNCH}m   Net: ${fmtHours(netMins)}`;
-    doc.setTextColor(167, 139, 250);
-    doc.text(sumStr, PW - MR, y + 5.5, { align: 'right' });
 
     return y + 10;
   };
 
   const drawWeekSubHeader = (y, label, wDays, wGross, wNet) => {
-    doc.setFillColor(13, 25, 50);
-    doc.rect(ML, y, usableW, 6, 'F');
+    doc.setFillColor(226, 232, 240); // light band
+    doc.rect(ML, y, TABLE_W, 6, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
-    doc.setTextColor(96, 165, 250);
+    doc.setTextColor(37, 99, 235); // blue label
     doc.text(label, ML + 3, y + 4.2);
 
-    doc.setTextColor(100, 116, 139);
+    doc.setTextColor(100, 116, 139); // softer summary
     const s2 = `${wDays} day${wDays !== 1 ? 's' : ''}   Gross: ${fmtHours(
       wGross,
     )}   −${wDays * LUNCH}m   Net: ${fmtHours(wNet)}`;
-    doc.text(s2, PW - MR, y + 4.2, { align: 'right' });
+    doc.text(s2, rightEdge, y + 4.2, { align: 'right' });
 
     return y + 6;
   };
@@ -1502,12 +1496,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
   const totalAllDays = summary.reduce((a, s) => a + s.days, 0);
   const totalAllNet = summary.reduce((a, s) => a + s.net, 0);
 
-  drawHeader(
-    periodLabel,
-    `${summary.length} staff  ·  ${totalAllDays} days worked  ·  Total net hours: ${fmtHours(
-      totalAllNet,
-    )}  ·  Lunch deduction: 30 min/day`,
-  );
+  drawHeader(periodLabel);
 
   let y = 26;
 
@@ -1537,7 +1526,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
             fmt(log?.clock_in),
             fmt(log?.clock_out),
             gross != null ? fmtHours(gross) : '—',
-            log ? `−${LUNCH}m` : '—',
+            log ? `${LUNCH}m` : '—',
             net != null ? fmtHours(net) : '—',
             log?.notes || '',
           ],
@@ -1545,6 +1534,15 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
           isWknd,
         );
       });
+      // Week total: net hours Monday–Sunday
+      y = checkPageBreak(y, 8);
+      doc.setFillColor(226, 232, 240);
+      doc.rect(ML, y, TABLE_W, 6.5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(37, 99, 235);
+      doc.text(`Net hours (Mon–Sun): ${fmtHours(s.net)}`, ML + 3, y + 4.5);
+      y += 8;
     } else {
       s.weekBreakdown
         .filter((w) => w.days > 0)
@@ -1580,7 +1578,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
                 fmt(log?.clock_in),
                 fmt(log?.clock_out),
                 gross != null ? fmtHours(gross) : '—',
-                log ? `−${LUNCH}m` : '—',
+                log ? `${LUNCH}m` : '—',
                 net != null ? fmtHours(net) : '—',
                 log?.notes || '',
               ],
@@ -1591,15 +1589,15 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
         });
 
       y = checkPageBreak(y, 8);
-      doc.setFillColor(30, 58, 100);
+      doc.setFillColor(226, 232, 240); // light total row
       doc.rect(ML, y, usableW, 6.5, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.setTextColor(167, 139, 250);
+      doc.setTextColor(37, 99, 235); // blue total text
       doc.text(
         `TOTAL for ${s.name}:  ${s.days} days   Gross ${fmtHours(
           s.gross,
-        )}   Lunch −${s.days * LUNCH}m   Net ${fmtHours(s.net)}`,
+        )}   −${s.days * LUNCH}m   Net ${fmtHours(s.net)}`,
         ML + 3,
         y + 4.5,
       );
