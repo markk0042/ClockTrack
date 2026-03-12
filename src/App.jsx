@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
+import { supabase } from './supabaseClient';
 
-// ─── DEMO DATA ────────────────────────────────────────────────────────────────
+// ─── DEMO DATA (used only if Supabase is empty) ───────────────────────────────
 const initialStaff = [
-  { id: '1', name: 'Alice Murphy', company: 'HQ Dublin', department: 'Sales', email: 'alice@company.com', active: true },
-  { id: '2', name: "Brian O'Connor", company: 'HQ Dublin', department: 'Engineering', email: 'brian@company.com', active: true },
-  { id: '3', name: 'Claire Walsh', company: 'Branch Cork', department: 'HR', email: 'claire@company.com', active: true },
-  { id: '4', name: 'David Byrne', company: 'HQ Dublin', department: 'Finance', email: 'david@company.com', active: true },
-  { id: '5', name: 'Emma Gallagher', company: 'Branch Galway', department: 'Marketing', email: 'emma@company.com', active: true },
-  { id: '6', name: 'Frank Kelly', company: 'HQ Dublin', department: 'Sales', email: 'frank@company.com', active: true },
-  { id: '7', name: 'Grace Doyle', company: 'Branch Cork', department: 'Engineering', email: 'grace@company.com', active: true },
-  { id: '8', name: 'Henry Nolan', company: 'HQ Dublin', department: 'Operations', email: 'henry@company.com', active: true },
-  { id: '9', name: 'Irene Brennan', company: 'HQ Dublin', department: 'Sales', email: 'irene@company.com', active: true },
-  { id: '10', name: 'James Fitzpatrick', company: 'Branch Cork', department: 'Finance', email: 'james@company.com', active: true },
+  { id: '1', name: 'Alice Murphy', company: 'HQ Dublin', department: 'Sales', email: 'alice@company.com', active: true, pin: '1111' },
+  { id: '2', name: "Brian O'Connor", company: 'HQ Dublin', department: 'Engineering', email: 'brian@company.com', active: true, pin: '2222' },
+  { id: '3', name: 'Claire Walsh', company: 'Branch Cork', department: 'HR', email: 'claire@company.com', active: true, pin: '3333' },
+  { id: '4', name: 'David Byrne', company: 'HQ Dublin', department: 'Finance', email: 'david@company.com', active: true, pin: '4444' },
+  { id: '5', name: 'Emma Gallagher', company: 'Branch Galway', department: 'Marketing', email: 'emma@company.com', active: true, pin: '5555' },
+  { id: '6', name: 'Frank Kelly', company: 'HQ Dublin', department: 'Sales', email: 'frank@company.com', active: true, pin: '6666' },
+  { id: '7', name: 'Grace Doyle', company: 'Branch Cork', department: 'Engineering', email: 'grace@company.com', active: true, pin: '7777' },
+  { id: '8', name: 'Henry Nolan', company: 'HQ Dublin', department: 'Operations', email: 'henry@company.com', active: true, pin: '8888' },
+  { id: '9', name: 'Irene Brennan', company: 'HQ Dublin', department: 'Sales', email: 'irene@company.com', active: true, pin: '9999' },
+  { id: '10', name: 'James Fitzpatrick', company: 'Branch Cork', department: 'Finance', email: 'james@company.com', active: true, pin: '0000' },
 ];
 
 const getDateStr = (d) => {
@@ -87,6 +88,39 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
   const [staff, setStaff] = useState(initialStaff);
   const [logs, setLogs] = useState(initialLogs);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const { data: staffRows, error: staffErr } = await supabase
+        .from('staff')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (!staffErr && staffRows && staffRows.length > 0) {
+        setStaff(staffRows);
+      }
+
+      const { data: logRows, error: logErr } = await supabase
+        .from('time_logs')
+        .select('*')
+        .order('work_date', { ascending: false });
+
+      if (!logErr && logRows) {
+        setLogs(
+          logRows.map((l) => ({
+            id: l.id,
+            staff_id: l.staff_id,
+            clock_in: l.clock_in,
+            clock_out: l.clock_out,
+            date: l.work_date,
+            notes: l.notes || '',
+          })),
+        );
+      }
+    };
+
+    loadData();
+  }, []);
 
   const handleAdminLogin = () => {
     if (adminCreds.u === 'admin' && adminCreds.p === 'admin123') {
@@ -192,6 +226,8 @@ const NavBtn = ({ active, onClick, children }) => (
 const KioskView = ({ staff, logs, setLogs }) => {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState('');
   const [status, setStatus] = useState(null);
   const [tick, setTick] = useState(new Date());
 
@@ -213,26 +249,65 @@ const KioskView = ({ staff, logs, setLogs }) => {
 
   const handleSelect = (person) => {
     setSelected(person);
+    setPin('');
+    setPinError('');
     setSearch('');
   };
 
-  const handleClock = (type) => {
+  const handleClock = async (type) => {
+    if (!selected) return;
+    if (!pin || pin.length !== 4) {
+      setPinError('Enter 4-digit PIN.');
+      return;
+    }
+    if (selected.pin && pin !== selected.pin) {
+      setPinError('Incorrect PIN.');
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const existing = getTodayLog(selected.id);
     if (type === 'in' && !existing) {
-      setLogs((prev) => [
-        ...prev,
-        {
-          id: `l${Date.now()}`,
+      const { data, error } = await supabase
+        .from('time_logs')
+        .insert({
           staff_id: selected.id,
           clock_in: nowIso,
           clock_out: null,
-          date: todayStr2,
+          work_date: todayStr2,
           notes: '',
-        },
-      ]);
+        })
+        .select('*')
+        .single();
+      if (!error && data) {
+        setLogs((prev) => [
+          ...prev,
+          {
+            id: data.id,
+            staff_id: data.staff_id,
+            clock_in: data.clock_in,
+            clock_out: data.clock_out,
+            date: data.work_date,
+            notes: data.notes || '',
+          },
+        ]);
+      }
     } else if (type === 'out' && existing && !existing.clock_out) {
-      setLogs((prev) => prev.map((l) => (l.id === existing.id ? { ...l, clock_out: nowIso } : l)));
+      const { data, error } = await supabase
+        .from('time_logs')
+        .update({ clock_out: nowIso })
+        .eq('id', existing.id)
+        .select('*')
+        .single();
+      if (!error && data) {
+        setLogs((prev) =>
+          prev.map((l) =>
+            l.id === existing.id
+              ? { ...l, clock_out: data.clock_out }
+              : l,
+          ),
+        );
+      }
     }
     setStatus({
       type,
@@ -243,6 +318,8 @@ const KioskView = ({ staff, logs, setLogs }) => {
       }),
     });
     setSelected(null);
+    setPin('');
+    setPinError('');
     setTimeout(() => setStatus(null), 4000);
   };
 
@@ -471,12 +548,38 @@ const KioskView = ({ staff, logs, setLogs }) => {
                 )}
               </div>
             )}
+            <div style={{ marginTop: 12 }}>
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                value={pin}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setPin(v);
+                  setPinError('');
+                }}
+                placeholder="Enter 4-digit PIN"
+                style={{
+                  ...IS,
+                  textAlign: 'center',
+                  letterSpacing: 4,
+                  fontSize: 18,
+                  maxWidth: 220,
+                  margin: '0 auto',
+                }}
+              />
+              {pinError && (
+                <div style={{ color: '#f97373', fontSize: 12, marginTop: 6 }}>{pinError}</div>
+              )}
+            </div>
             <div
               style={{
                 display: 'flex',
                 gap: 12,
                 justifyContent: 'center',
                 flexWrap: 'wrap',
+                marginTop: 16,
               }}
             >
               <ActionBtn disabled={!canClockIn} color="#3b82f6" onClick={() => handleClock('in')}>
@@ -881,7 +984,6 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
   };
 
   const deleteLog = (log) => {
-    // eslint-disable-next-line no-restricted-globals
     if (window.confirm(`Delete record for ${staff.find((s) => s.id === log.staff_id)?.name}?`)) {
       setLogs((prev) => prev.filter((l) => l.id !== log.id));
     }
@@ -1433,7 +1535,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     return y + 6;
   };
 
-  const drawStaffHeader = (y, s, totalDays, grossMins, netMins) => {
+  const drawStaffHeader = (y, s) => {
     doc.setFillColor(219, 234, 254); // soft blue bar
     doc.rect(ML, y, TABLE_W, 8, 'F');
     doc.setFillColor(59, 130, 246); // blue accent strip
@@ -1493,9 +1595,6 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
           activeDates[activeDates.length - 1],
         )}  (${weekRanges.length} week${weekRanges.length !== 1 ? 's' : ''})`;
 
-  const totalAllDays = summary.reduce((a, s) => a + s.days, 0);
-  const totalAllNet = summary.reduce((a, s) => a + s.net, 0);
-
   drawHeader(periodLabel);
 
   let y = 26;
@@ -1503,7 +1602,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
   summary.forEach((s) => {
     y = checkPageBreak(y, 30);
 
-    y = drawStaffHeader(y, s, s.days, s.gross, s.net);
+    y = drawStaffHeader(y, s);
 
     if (mode === 'week') {
       y = drawTableHeader(y);
@@ -1703,14 +1802,12 @@ const Reports = ({ staff, logs }) => {
     await new Promise((r) => setTimeout(r, 50));
     try {
       if (!window.jspdf || !window.jspdf.jsPDF) {
-        // eslint-disable-next-line no-alert
         alert('PDF library is not available. Please refresh the page and try again.');
         setGenerating(false);
         return;
       }
       buildPDF(summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, LUNCH);
     } catch (e) {
-      // eslint-disable-next-line no-alert
       alert(`PDF error: ${e.message}`);
     }
     setGenerating(false);
