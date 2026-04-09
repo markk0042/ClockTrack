@@ -3,16 +3,101 @@ import { supabase } from './supabaseClient';
 
 // ─── DEMO DATA (used only if Supabase is empty) ───────────────────────────────
 const initialStaff = [
-  { id: '1', name: 'Alice Murphy', company: 'HQ Dublin', department: 'Sales', email: 'alice@company.com', active: true, pin: '1111' },
-  { id: '2', name: "Brian O'Connor", company: 'HQ Dublin', department: 'Engineering', email: 'brian@company.com', active: true, pin: '2222' },
-  { id: '3', name: 'Claire Walsh', company: 'Branch Cork', department: 'HR', email: 'claire@company.com', active: true, pin: '3333' },
-  { id: '4', name: 'David Byrne', company: 'HQ Dublin', department: 'Finance', email: 'david@company.com', active: true, pin: '4444' },
-  { id: '5', name: 'Emma Gallagher', company: 'Branch Galway', department: 'Marketing', email: 'emma@company.com', active: true, pin: '5555' },
-  { id: '6', name: 'Frank Kelly', company: 'HQ Dublin', department: 'Sales', email: 'frank@company.com', active: true, pin: '6666' },
-  { id: '7', name: 'Grace Doyle', company: 'Branch Cork', department: 'Engineering', email: 'grace@company.com', active: true, pin: '7777' },
-  { id: '8', name: 'Henry Nolan', company: 'HQ Dublin', department: 'Operations', email: 'henry@company.com', active: true, pin: '8888' },
-  { id: '9', name: 'Irene Brennan', company: 'HQ Dublin', department: 'Sales', email: 'irene@company.com', active: true, pin: '9999' },
-  { id: '10', name: 'James Fitzpatrick', company: 'Branch Cork', department: 'Finance', email: 'james@company.com', active: true, pin: '0000' },
+  // Imported staff list (company → surname → name)
+  { id: '11', name: 'Blaz Maratovic', company: 'Farley', department: '', email: '', active: true, pin: '1011' },
+  { id: '12', name: 'Stjepan Maratovic', company: 'Farley', department: '', email: '', active: true, pin: '1012' },
+  { id: '13', name: "Paddy O'Connor", company: 'Farley', department: '', email: '', active: true, pin: '1013' },
+  { id: '14', name: "Mick O'Brien", company: 'Farley', department: '', email: '', active: true, pin: '1014' },
+  { id: '15', name: 'Eddie Guidera', company: 'Farley', department: '', email: '', active: true, pin: '1015' },
+  { id: '16', name: "Paul O'Brien", company: 'Farley', department: '', email: '', active: true, pin: '1016' },
+  { id: '17', name: 'Daniel Dobrogorski', company: 'Farley', department: '', email: '', active: true, pin: '1017' },
+  { id: '18', name: 'Vitali Majura', company: 'Farley', department: '', email: '', active: true, pin: '1018' },
+  { id: '19', name: 'Jason Beggs', company: 'Farley', department: '', email: '', active: true, pin: '1019' },
+  { id: '20', name: 'Dalibor Barasic', company: 'Farley', department: '', email: '', active: true, pin: '1020' },
+  { id: '21', name: 'Mark Lodge', company: 'Farley', department: '', email: '', active: true, pin: '1021' },
+  { id: '22', name: 'Martynaz Vitkauskas', company: 'Farley', department: '', email: '', active: true, pin: '1022' },
+
+  { id: '23', name: 'Aljaz Prosenc', company: 'Montpro', department: '', email: '', active: true, pin: '1023' },
+  { id: '24', name: 'Sadik Asani', company: 'Montpro', department: '', email: '', active: true, pin: '1024' },
+  { id: '25', name: 'Redzep Asani', company: 'Montpro', department: '', email: '', active: true, pin: '1025' },
+  { id: '26', name: 'Andrej Benulic', company: 'Montpro', department: '', email: '', active: true, pin: '1026' },
+  { id: '27', name: 'Matjaz Koritnik', company: 'Montpro', department: '', email: '', active: true, pin: '1027' },
+  { id: '28', name: 'Franc Marvin', company: 'Montpro', department: '', email: '', active: true, pin: '1028' },
+  { id: '29', name: 'Borut Siraj', company: 'Montpro', department: '', email: '', active: true, pin: '1029' },
+  { id: '30', name: 'Boris Debevec', company: 'Montpro', department: '', email: '', active: true, pin: '1030' },
+  { id: '31', name: 'Matjaz Kokot', company: 'Montpro', department: '', email: '', active: true, pin: '1031' },
+  { id: '32', name: 'Plamen Petrov', company: 'Montpro', department: '', email: '', active: true, pin: '1032' },
+  { id: '33', name: 'Franc Pucko', company: 'Montpro', department: '', email: '', active: true, pin: '1033' },
+  { id: '34', name: 'Mario Krizanac', company: 'Montpro', department: '', email: '', active: true, pin: '1034' },
+  { id: '35', name: 'Dejan Kozel', company: 'Montpro', department: '', email: '', active: true, pin: '1035' },
+  { id: '36', name: 'Tomislav Radovan', company: 'Montpro', department: '', email: '', active: true, pin: '1036' },
+  { id: '37', name: 'Denis Doaga', company: 'Montpro', department: '', email: '', active: true, pin: '1037' },
+
+  { id: '38', name: 'Karl Sheldreck', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1038' },
+  { id: '39', name: 'Tony Stephens', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1039' },
+  { id: '40', name: 'Karl Lawless', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1040' },
+  { id: '41', name: 'Arkadiusz Tolak', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1041' },
+  { id: '42', name: 'Piotr Kozlowski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1042' },
+  { id: '43', name: 'Thomas Dowdall', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1043' },
+  { id: '44', name: 'Jamie Lawless', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1044' },
+  { id: '45', name: 'Keith Gaynor', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1045' },
+  { id: '46', name: 'Adrian Walaszewski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1046' },
+  { id: '47', name: 'Wojciech Grabowski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1047' },
+  { id: '48', name: 'Przemyslaw Szymanczak', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1048' },
+  { id: '49', name: 'Seamus Dowdall', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1049' },
+  { id: '50', name: 'Colin Bolton', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1050' },
+  { id: '51', name: 'Keith Core', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1051' },
+  { id: '52', name: 'Eric Byrne', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1052' },
+  { id: '53', name: 'Alan Clarke', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1053' },
+  { id: '54', name: 'Neil Murphy', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1054' },
+  { id: '55', name: 'Robert Celinski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1055' },
+  { id: '56', name: 'Brian Dobbyn', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1056' },
+
+  { id: '57', name: "Jordan O'Neil", company: 'BIS', department: '', email: '', active: true, pin: '1057' },
+  { id: '58', name: 'Jaimie Smith', company: 'BIS', department: '', email: '', active: true, pin: '1058' },
+  { id: '59', name: 'Callum McDermott', company: 'BIS', department: '', email: '', active: true, pin: '1059' },
+
+  { id: '60', name: 'Patryk Myklasz', company: 'BSS', department: '', email: '', active: true, pin: '1060' },
+  { id: '61', name: 'J.P Farrell', company: 'BSS', department: '', email: '', active: true, pin: '1061' },
+  { id: '62', name: 'Andriy Degtyar', company: 'BSS', department: '', email: '', active: true, pin: '1062' },
+  { id: '63', name: 'Lukasz Szulczyk', company: 'BSS', department: '', email: '', active: true, pin: '1063' },
+  { id: '64', name: 'Giorgi Tchigitashvli', company: 'BSS', department: '', email: '', active: true, pin: '1064' },
+  { id: '65', name: 'Shota Marukashvli', company: 'BSS', department: '', email: '', active: true, pin: '1065' },
+  { id: '66', name: 'Artur Palonek', company: 'BSS', department: '', email: '', active: true, pin: '1066' },
+  { id: '67', name: 'Andesar Kurti', company: 'BSS', department: '', email: '', active: true, pin: '1067' },
+  { id: '68', name: 'Mohammed Sabir', company: 'BSS', department: '', email: '', active: true, pin: '1068' },
+  { id: '69', name: 'John Pujins', company: 'BSS', department: '', email: '', active: true, pin: '1069' },
+  { id: '70', name: 'Tony Fox', company: 'BSS', department: '', email: '', active: true, pin: '1070' },
+  { id: '71', name: 'Daniel Bronowicki', company: 'BSS', department: '', email: '', active: true, pin: '1071' },
+  { id: '72', name: 'Janis Jursevsris', company: 'BSS', department: '', email: '', active: true, pin: '1072' },
+  { id: '73', name: 'Joseph Carribine', company: 'BSS', department: '', email: '', active: true, pin: '1073' },
+  { id: '74', name: 'Stephen Nolan', company: 'BSS', department: '', email: '', active: true, pin: '1074' },
+  { id: '75', name: 'Hubert Kostecki', company: 'BSS', department: '', email: '', active: true, pin: '1075' },
+  { id: '76', name: 'Pawel Burzynski', company: 'BSS', department: '', email: '', active: true, pin: '1076' },
+  { id: '77', name: 'Irina Ciobanu', company: 'BSS', department: '', email: '', active: true, pin: '1077' },
+  { id: '78', name: 'Anton Kostychencko', company: 'BSS', department: '', email: '', active: true, pin: '1078' },
+  { id: '79', name: 'Mark Kelly', company: 'BSS', department: '', email: '', active: true, pin: '1079' },
+  { id: '80', name: 'Pavol Brezina', company: 'BSS', department: '', email: '', active: true, pin: '1080' },
+
+  { id: '81', name: 'Rafal Gajda', company: 'Troisy', department: '', email: '', active: true, pin: '1081' },
+  { id: '82', name: 'Dominik Lagosz', company: 'Troisy', department: '', email: '', active: true, pin: '1082' },
+  { id: '83', name: 'Damian Lagosz', company: 'Troisy', department: '', email: '', active: true, pin: '1083' },
+  { id: '84', name: 'Piotr Malkowski', company: 'Troisy', department: '', email: '', active: true, pin: '1084' },
+  { id: '85', name: 'Adam Jankowski', company: 'Troisy', department: '', email: '', active: true, pin: '1085' },
+  { id: '86', name: 'Krzysztof Huc', company: 'Troisy', department: '', email: '', active: true, pin: '1086' },
+  { id: '87', name: 'Sebastian Nowak', company: 'Troisy', department: '', email: '', active: true, pin: '1087' },
+  { id: '88', name: 'Tomasz Kalinowski', company: 'Troisy', department: '', email: '', active: true, pin: '1088' },
+  { id: '89', name: 'Mateusz Grzeskiewicz', company: 'Troisy', department: '', email: '', active: true, pin: '1089' },
+
+  { id: '90', name: 'Adam Menzel', company: 'EMS', department: '', email: '', active: true, pin: '1090' },
+
+  { id: '91', name: 'Ernest Mukula', company: 'C.Real', department: '', email: '', active: true, pin: '1091' },
+  { id: '92', name: 'Serge Katandza', company: 'C.Real', department: '', email: '', active: true, pin: '1092' },
+  { id: '93', name: 'Christopher Cole', company: 'C.Real', department: '', email: '', active: true, pin: '1093' },
+  { id: '94', name: 'Andrew Phiri', company: 'C.Real', department: '', email: '', active: true, pin: '1094' },
+  { id: '95', name: 'Ciril Royiz', company: 'C.Real', department: '', email: '', active: true, pin: '1095' },
+  { id: '96', name: 'Taiye Ajenipu', company: 'C.Real', department: '', email: '', active: true, pin: '1096' },
+  { id: '97', name: 'Thom Mitole', company: 'C.Real', department: '', email: '', active: true, pin: '1097' },
 ];
 
 const getDateStr = (d) => {
@@ -22,21 +107,8 @@ const getDateStr = (d) => {
   return `${yr}-${mo}-${dy}`;
 };
 
-const now = new Date();
-const todayStr = getDateStr(now);
-const makeTime = (h, m) => {
-  const d = new Date(now);
-  d.setHours(h, m, 0, 0);
-  return d.toISOString();
-};
-
 const initialLogs = [
-  { id: 'l1', staff_id: '1', clock_in: makeTime(8, 52), clock_out: makeTime(17, 5), date: todayStr, notes: '' },
-  { id: 'l2', staff_id: '2', clock_in: makeTime(9, 1), clock_out: null, date: todayStr, notes: '' },
-  { id: 'l3', staff_id: '3', clock_in: makeTime(8, 30), clock_out: makeTime(16, 30), date: todayStr, notes: '' },
-  { id: 'l4', staff_id: '4', clock_in: makeTime(9, 15), clock_out: makeTime(18, 0), date: todayStr, notes: '' },
-  { id: 'l5', staff_id: '5', clock_in: makeTime(8, 45), clock_out: makeTime(17, 15), date: todayStr, notes: '' },
-  { id: 'l6', staff_id: '6', clock_in: makeTime(9, 0), clock_out: null, date: todayStr, notes: '' },
+  // (demo logs removed)
 ];
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
@@ -943,6 +1015,15 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
     clock_out: '',
     notes: '',
   });
+  const [showAdd, setShowAdd] = useState(false);
+  const [addVals, setAddVals] = useState({
+    staff_id: '',
+    work_date: getDateStr(new Date()),
+    clock_in: '',
+    clock_out: '',
+    notes: '',
+  });
+  const [addError, setAddError] = useState('');
 
   const dayLogs = logs.filter((l) => l.date === dateFilter);
 
@@ -959,23 +1040,46 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
     });
   };
 
-  const saveEdit = () => {
-    const toISO = (t) => {
-      if (!t) return null;
-      const [h, m] = t.split(':').map(Number);
-      const d = new Date(`${editLog.date}T00:00:00`);
-      d.setHours(h, m, 0, 0);
-      return d.toISOString();
+  const toISO = (dateStr, t) => {
+    if (!t) return null;
+    const [h, m] = t.split(':').map(Number);
+    const d = new Date(`${dateStr}T00:00:00`);
+    d.setHours(h, m, 0, 0);
+    return d.toISOString();
+  };
+
+  const saveEdit = async () => {
+    const next = {
+      clock_in: toISO(editLog.date, editVals.clock_in),
+      clock_out: toISO(editLog.date, editVals.clock_out) || null,
+      notes: editVals.notes,
     };
+
+    const { data, error } = await supabase
+      .from('time_logs')
+      .update({
+        clock_in: next.clock_in,
+        clock_out: next.clock_out,
+        notes: next.notes,
+      })
+      .eq('id', editLog.id)
+      .select('*')
+      .single();
+
+    if (error) {
+      alert(`Failed to save: ${error.message}`);
+      return;
+    }
 
     setLogs((prev) =>
       prev.map((l) =>
         l.id === editLog.id
           ? {
               ...l,
-              clock_in: toISO(editVals.clock_in),
-              clock_out: toISO(editVals.clock_out) || null,
-              notes: editVals.notes,
+              clock_in: data.clock_in,
+              clock_out: data.clock_out,
+              date: data.work_date,
+              notes: data.notes || '',
             }
           : l,
       ),
@@ -983,10 +1087,81 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
     setEditLog(null);
   };
 
-  const deleteLog = (log) => {
+  const deleteLog = async (log) => {
     if (window.confirm(`Delete record for ${staff.find((s) => s.id === log.staff_id)?.name}?`)) {
+      const { error } = await supabase.from('time_logs').delete().eq('id', log.id);
+      if (error) {
+        alert(`Failed to delete: ${error.message}`);
+        return;
+      }
       setLogs((prev) => prev.filter((l) => l.id !== log.id));
     }
+  };
+
+  const openAdd = () => {
+    setAddError('');
+    setAddVals({
+      staff_id: '',
+      work_date: dateFilter || getDateStr(new Date()),
+      clock_in: '',
+      clock_out: '',
+      notes: '',
+    });
+    setShowAdd(true);
+  };
+
+  const saveAdd = async () => {
+    setAddError('');
+    if (!addVals.staff_id) {
+      setAddError('Choose a staff member.');
+      return;
+    }
+    if (!addVals.work_date) {
+      setAddError('Choose a work date.');
+      return;
+    }
+    if (!addVals.clock_in) {
+      setAddError('Clock-in time is required.');
+      return;
+    }
+
+    const clock_in = toISO(addVals.work_date, addVals.clock_in);
+    const clock_out = toISO(addVals.work_date, addVals.clock_out) || null;
+
+    if (clock_out && clock_out < clock_in) {
+      setAddError('Clock-out time must be after clock-in time.');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('time_logs')
+      .insert({
+        staff_id: addVals.staff_id,
+        clock_in,
+        clock_out,
+        work_date: addVals.work_date,
+        notes: addVals.notes || '',
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      setAddError(error.message);
+      return;
+    }
+
+    setLogs((prev) => [
+      {
+        id: data.id,
+        staff_id: data.staff_id,
+        clock_in: data.clock_in,
+        clock_out: data.clock_out,
+        date: data.work_date,
+        notes: data.notes || '',
+      },
+      ...prev,
+    ]);
+    setShowAdd(false);
   };
 
   return (
@@ -1007,6 +1182,9 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
           onChange={(e) => setDateFilter(e.target.value)}
           style={{ ...IS, width: 'auto' }}
         />
+        <button type="button" onClick={openAdd} style={{ ...PB, padding: '9px 14px' }}>
+          + Manual Entry
+        </button>
         <div style={{ color: '#64748b', fontSize: 13 }}>
           {dayLogs.length} record{dayLogs.length !== 1 ? 's' : ''} for{' '}
           {fmtDate(dateFilter)}
@@ -1168,6 +1346,66 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
           </div>
         </Modal>
       )}
+
+      {showAdd && (
+        <Modal title="Add Manual Clock Entry" onClose={() => setShowAdd(false)}>
+          <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
+            Use this for staff who forgot to clock in/out.
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 5 }}>
+              Staff Member *
+            </div>
+            <select
+              value={addVals.staff_id}
+              onChange={(e) => setAddVals((p) => ({ ...p, staff_id: e.target.value }))}
+              style={{ ...IS, width: '100%', boxSizing: 'border-box' }}
+            >
+              <option value="">Select staff…</option>
+              {[...staff]
+                .filter((s) => s.active)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.company || '—'}{s.department ? ` · ${s.department}` : ''})
+                  </option>
+                ))}
+            </select>
+          </div>
+          <LI
+            label="Work Date *"
+            type="date"
+            value={addVals.work_date}
+            onChange={(v) => setAddVals((p) => ({ ...p, work_date: v }))}
+          />
+          <LI
+            label="Clock In (start) *"
+            type="time"
+            value={addVals.clock_in}
+            onChange={(v) => setAddVals((p) => ({ ...p, clock_in: v }))}
+          />
+          <LI
+            label="Clock Out (finish)"
+            type="time"
+            value={addVals.clock_out}
+            onChange={(v) => setAddVals((p) => ({ ...p, clock_out: v }))}
+          />
+          <LI
+            label="Notes"
+            value={addVals.notes}
+            onChange={(v) => setAddVals((p) => ({ ...p, notes: v }))}
+          />
+          {addError && <div style={{ color: '#f87171', fontSize: 13 }}>{addError}</div>}
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button type="button" onClick={saveAdd} style={PB}>
+              Save Entry
+            </button>
+            <button type="button" onClick={() => setShowAdd(false)} style={XB}>
+              Cancel
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
@@ -1227,6 +1465,25 @@ const StaffAdmin = ({ staff, setStaff }) => {
       setStaff((prev) => [...prev, { id: `s${Date.now()}`, ...form }]);
     }
     setShowForm(false);
+  };
+
+  const deleteStaff = async (p) => {
+    const msg = `Delete ${p.name}?\n\nThis will also delete all of their clock logs. This cannot be undone.`;
+    if (!window.confirm(msg)) return;
+
+    const { error: logsErr } = await supabase.from('time_logs').delete().eq('staff_id', p.id);
+    if (logsErr) {
+      alert(`Failed to delete clock logs: ${logsErr.message}`);
+      return;
+    }
+
+    const { error: staffErr } = await supabase.from('staff').delete().eq('id', p.id);
+    if (staffErr) {
+      alert(`Failed to delete staff member: ${staffErr.message}`);
+      return;
+    }
+
+    setStaff((prev) => prev.filter((s) => s.id !== p.id));
   };
 
   return (
@@ -1350,6 +1607,13 @@ const StaffAdmin = ({ staff, setStaff }) => {
                   >
                     {p.active ? 'Deactivate' : 'Activate'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteStaff(p)}
+                    style={{ ...SB, background: '#7f1d1d', marginLeft: 6 }}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -1454,11 +1718,15 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     'Net Hours',
     'Notes',
   ];
+  const ROSTER_W = 56;
+  const ROSTER_GAP = 6;
+  const CONTENT_X = ML + ROSTER_W + ROSTER_GAP;
+  const CONTENT_W = usableW - ROSTER_W - ROSTER_GAP;
   const fixedColWidths = [30, 14, 18, 18, 18, 14, 20];
   const totalFixedWidth = fixedColWidths.reduce((a, b) => a + b, 0);
-  const notesWidth = usableW - totalFixedWidth - 8; // keep extra right margin, but give notes more space
+  const notesWidth = CONTENT_W - totalFixedWidth - 8; // keep extra right margin, but give notes more space
   const CW = [...fixedColWidths, notesWidth];
-  const TABLE_W = usableW; // table stays within margins for equal left/right white space
+  const TABLE_W = CONTENT_W; // table stays within margins for equal left/right white space
 
   let pageNum = 1;
 
@@ -1469,7 +1737,45 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     doc.text(`Generated: ${new Date().toLocaleString('en-IE')}`, ML, PH - 5);
   };
 
-  const rightEdge = ML + usableW - 5; // summary text ends here for cleaner reading
+  const rightEdge = CONTENT_X + CONTENT_W - 5; // summary text ends here for cleaner reading
+
+  const drawRoster = (activeIndex = -1) => {
+    const top = 26;
+    const bottom = PH - 14;
+
+    // Sidebar background
+    doc.setFillColor(15, 23, 42);
+    doc.rect(ML, top, ROSTER_W, bottom - top, 'F');
+
+    // Sidebar header
+    doc.setFillColor(30, 41, 59);
+    doc.rect(ML, top, ROSTER_W, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(226, 232, 240);
+    doc.text('Staff', ML + 3, top + 5.5);
+
+    // Names
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    const listStartY = top + 12;
+    const lineH = 5.2;
+    const maxLines = Math.floor((bottom - listStartY) / lineH);
+
+    summary.slice(0, maxLines).forEach((s, i) => {
+      const y = listStartY + i * lineH;
+      const isActive = i === activeIndex;
+
+      if (isActive) {
+        doc.setFillColor(30, 58, 95);
+        doc.rect(ML + 1.5, y - 3.6, ROSTER_W - 3, 4.6, 'F');
+      }
+
+      doc.setTextColor(isActive ? 147 : 148, isActive ? 197 : 163, isActive ? 253 : 184);
+      const label = `${i + 1}. ${s.name}`;
+      doc.text(label.length > 26 ? `${label.slice(0, 26)}…` : label, ML + 3, y);
+    });
+  };
 
   const drawHeader = (title) => {
     // Light header bar for easier reading
@@ -1488,14 +1794,242 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     doc.text(title, rightEdge, 9, { align: 'right' });
   };
 
+  const drawWeeklySheet = (title) => {
+    // Layout tuned to match the uploaded "Weekly Sign In Sheet" style:
+    // rows = staff, columns = company/surname/name + daily IN/OUT + totals.
+    const x0 = ML;
+    const y0 = 26;
+    const bottom = PH - 14;
+
+    const staffCols = [
+      { key: 'company', label: 'COMPANY', w: 22 },
+      { key: 'surname', label: 'SURNAME', w: 26 },
+      { key: 'name', label: 'NAME', w: 22 },
+    ];
+    const dayBlockW = 16; // IN + OUT (8mm each)
+    const inW = 8;
+    const outW = 8;
+    const totalsCols = [
+      { key: 'gross', label: 'Gross', w: 14 },
+      { key: 'lunch', label: 'Lunch', w: 10 },
+      { key: 'net', label: 'Net Hours', w: 14 },
+      { key: 'notes', label: 'Notes', w: 33 },
+    ];
+
+    const sheetW =
+      staffCols.reduce((a, c) => a + c.w, 0) +
+      activeDates.length * dayBlockW +
+      totalsCols.reduce((a, c) => a + c.w, 0);
+
+    // Subtle outer border
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.2);
+    doc.rect(x0, y0, sheetW, bottom - y0);
+
+    const headerH1 = 10; // top header row (days)
+    const headerH2 = 6; // sub header row (in/out)
+    const rowH = 6;
+
+    const ordinal = (n) => {
+      const j = n % 10;
+      const k = n % 100;
+      if (j === 1 && k !== 11) return `${n}st`;
+      if (j === 2 && k !== 12) return `${n}nd`;
+      if (j === 3 && k !== 13) return `${n}rd`;
+      return `${n}th`;
+    };
+    const fmtDayMonth = (dateStr) => {
+      const d = new Date(`${dateStr}T00:00:00`);
+      const day = ordinal(d.getDate());
+      const month = d.toLocaleDateString('en-IE', { month: 'long' });
+      return [day, month];
+    };
+    const getSurname = (fullName) => {
+      const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+      return parts.length > 1 ? parts[parts.length - 1] : parts[0] || '';
+    };
+    const getFirstName = (fullName) => {
+      const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+      return parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0] || '';
+    };
+
+    const drawGridHeader = (topY) => {
+      // Background band
+      doc.setFillColor(226, 232, 240);
+      doc.rect(x0, topY, sheetW, headerH1 + headerH2, 'F');
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+
+      let x = x0;
+      // Fixed columns
+      staffCols.forEach((c) => {
+        doc.rect(x, topY, c.w, headerH1 + headerH2);
+        doc.text(c.label, x + 1.2, topY + 8.2);
+        x += c.w;
+      });
+
+      // Day blocks
+      activeDates.forEach((ds) => {
+        doc.rect(x, topY, dayBlockW, headerH1);
+        doc.setFontSize(7.5);
+        doc.text(fmtDayMonth(ds), x + dayBlockW / 2, topY + 4.2, { align: 'center' });
+        doc.setFontSize(7);
+        doc.rect(x, topY + headerH1, inW, headerH2);
+        doc.rect(x + inW, topY + headerH1, outW, headerH2);
+        doc.setFontSize(6.5);
+        doc.text('IN', x + 2.2, topY + headerH1 + 4.2);
+        doc.text('OUT', x + inW + 1.6, topY + headerH1 + 4.2);
+        doc.setFontSize(7);
+        x += dayBlockW;
+      });
+
+      // Totals columns
+      totalsCols.forEach((c) => {
+        doc.rect(x, topY, c.w, headerH1 + headerH2);
+        doc.text(c.label, x + 1.2, topY + 8.2);
+        x += c.w;
+      });
+
+      // Grid lines are already drawn via rects; restore text defaults
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(71, 85, 105);
+      return topY + headerH1 + headerH2;
+    };
+
+    let y = y0;
+    y = drawGridHeader(y);
+
+    const maxY = bottom - 2;
+
+    const startNewPage = () => {
+      addPageNum();
+      doc.addPage();
+      pageNum += 1;
+      drawHeader(title);
+      y = y0;
+      y = drawGridHeader(y);
+    };
+
+    const rows = [...summary].sort((a, b) => {
+      const ac = (a.company || '').localeCompare(b.company || '');
+      if (ac !== 0) return ac;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const companyColor = (companyName) => {
+      const key = String(companyName || '').trim().toLowerCase();
+      const preset = {
+        farley: [254, 243, 199], // amber-100
+        montpro: [219, 234, 254], // blue-100
+        'shadow hvac': [220, 252, 231], // green-100
+        bis: [237, 233, 254], // violet-100
+        bss: [255, 228, 230], // rose-100
+        troisy: [207, 250, 254], // cyan-100
+        ems: [240, 253, 250], // teal-50/100
+        'c.real': [255, 237, 213], // orange-100
+      };
+      if (preset[key]) return preset[key];
+
+      // Deterministic pastel from string hash
+      let h = 0;
+      for (let i = 0; i < key.length; i += 1) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+      const r = 210 + (h % 36);
+      const g = 210 + ((h >> 8) % 36);
+      const b = 210 + ((h >> 16) % 36);
+      return [r, g, b];
+    };
+
+    rows.forEach((s) => {
+      if (y + rowH > maxY) startNewPage();
+
+      let x = x0;
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.15);
+
+      // Fixed staff columns
+      const company = s.company || '';
+      const surname = getSurname(s.name);
+      const firstname = getFirstName(s.name);
+
+      const staffVals = [company, surname, firstname];
+      staffCols.forEach((c, i) => {
+        if (i === 0) {
+          const [r, g, b] = companyColor(company);
+          doc.setFillColor(r, g, b);
+          doc.rect(x, y, c.w, rowH, 'F');
+        }
+        doc.rect(x, y, c.w, rowH);
+        doc.setTextColor(30, 41, 59);
+        doc.text(String(staffVals[i] || ''), x + 1.2, y + 4.2);
+        x += c.w;
+      });
+
+      // Day cells (IN/OUT)
+      const logsByDate = new Map((s.sLogs || []).map((l) => [l.date, l]));
+      let weekGrossMins = 0;
+      let weekDays = 0;
+      const weekNotes = [];
+
+      activeDates.forEach((ds) => {
+        const log = logsByDate.get(ds);
+        const hasOut = Boolean(log?.clock_out);
+        const gross = hasOut ? minutesBetween(log.clock_in, log.clock_out) : 0;
+        if (hasOut) {
+          weekGrossMins += gross;
+          weekDays += 1;
+        }
+        if (log?.notes) weekNotes.push(log.notes);
+
+        // IN
+        doc.rect(x, y, inW, rowH);
+        doc.setTextColor(96, 165, 250);
+        doc.text(fmt(log?.clock_in), x + 1.0, y + 4.2);
+        // OUT
+        doc.rect(x + inW, y, outW, rowH);
+        doc.setTextColor(74, 222, 128);
+        doc.text(fmt(log?.clock_out), x + inW + 1.0, y + 4.2);
+
+        x += dayBlockW;
+      });
+
+      // Totals
+      const weekLunch = weekDays * LUNCH;
+      const weekNet = Math.max(0, weekGrossMins - weekLunch);
+      const notes = Array.from(new Set(weekNotes))
+        .join(' / ')
+        .slice(0, 70);
+
+      const totalsVals = [fmtHours(weekGrossMins), `${weekLunch}m`, fmtHours(weekNet), notes];
+      totalsCols.forEach((c, i) => {
+        doc.rect(x, y, c.w, rowH);
+        const colorMap = [
+          [148, 163, 184], // gross
+          [248, 113, 113], // lunch
+          [167, 139, 250], // net
+          [71, 85, 105], // notes
+        ];
+        doc.setTextColor(...colorMap[i]);
+        doc.text(String(totalsVals[i] || ''), x + 1.2, y + 4.2);
+        x += c.w;
+      });
+
+      y += rowH;
+    });
+
+    addPageNum();
+  };
+
   const drawTableHeader = (y) => {
     doc.setFillColor(226, 232, 240); // light header band
-    doc.rect(ML, y, TABLE_W, 7, 'F');
+    doc.rect(CONTENT_X, y, TABLE_W, 7, 'F');
     doc.setTextColor(71, 85, 105); // darker header text
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
 
-    let x = ML;
+    let x = CONTENT_X;
     COLS.forEach((c, i) => {
       doc.text(c, x + 1.5, y + 4.8);
       x += CW[i];
@@ -1507,13 +2041,13 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
   const drawRow = (y, vals, shade, isWeekend) => {
     if (shade) {
       doc.setFillColor(248, 250, 252); // very light alternating row
-      doc.rect(ML, y, TABLE_W, 6, 'F');
+      doc.rect(CONTENT_X, y, TABLE_W, 6, 'F');
     }
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
 
-    let x = ML;
+    let x = CONTENT_X;
 
     vals.forEach((v, i) => {
       const colors = [
@@ -1537,14 +2071,14 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
 
   const drawStaffHeader = (y, s) => {
     doc.setFillColor(219, 234, 254); // soft blue bar
-    doc.rect(ML, y, TABLE_W, 8, 'F');
+    doc.rect(CONTENT_X, y, TABLE_W, 8, 'F');
     doc.setFillColor(59, 130, 246); // blue accent strip
-    doc.rect(ML, y, 2, 8, 'F');
+    doc.rect(CONTENT_X, y, 2, 8, 'F');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
     doc.setTextColor(15, 23, 42); // dark name text
-    doc.text(s.name, ML + 5, y + 5.5);
+    doc.text(s.name, CONTENT_X + 5, y + 5.5);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
@@ -1552,7 +2086,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     const nameGap = 10; // space between name and company · department
     doc.text(
       `${s.company || ''}  ·  ${s.department || ''}`,
-      ML + 5 + doc.getTextWidth(s.name) + nameGap,
+      CONTENT_X + 5 + doc.getTextWidth(s.name) + nameGap,
       y + 5.5,
     );
 
@@ -1561,11 +2095,11 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
 
   const drawWeekSubHeader = (y, label, wDays, wGross, wNet) => {
     doc.setFillColor(226, 232, 240); // light band
-    doc.rect(ML, y, TABLE_W, 6, 'F');
+    doc.rect(CONTENT_X, y, TABLE_W, 6, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(37, 99, 235); // blue label
-    doc.text(label, ML + 3, y + 4.2);
+    doc.text(label, CONTENT_X + 3, y + 4.2);
 
     doc.setTextColor(100, 116, 139); // softer summary
     const s2 = `${wDays} day${wDays !== 1 ? 's' : ''}   Gross: ${fmtHours(
@@ -1576,11 +2110,13 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     return y + 6;
   };
 
-  const checkPageBreak = (y, needed = 20) => {
+  const checkPageBreak = (y, needed = 20, rosterIndex = -1, headerTitle = '') => {
     if (y + needed > PH - 12) {
       addPageNum();
       doc.addPage();
       pageNum += 1;
+      if (headerTitle) drawHeader(headerTitle);
+      drawRoster(rosterIndex);
       return 26;
     }
     return y;
@@ -1595,19 +2131,33 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
           activeDates[activeDates.length - 1],
         )}  (${weekRanges.length} week${weekRanges.length !== 1 ? 's' : ''})`;
 
+  // Weekly reports use a sign-in sheet layout (all staff on one grid).
+  if (mode === 'week') {
+    drawHeader(periodLabel);
+    drawWeeklySheet(periodLabel);
+    const safePeriod =
+      activeDates.length > 0
+        ? `${activeDates[0]}_to_${activeDates[activeDates.length - 1]}`
+        : 'report';
+    doc.save(`clocktrack_report_${safePeriod}.pdf`);
+    return;
+  }
+
   drawHeader(periodLabel);
+  drawRoster(-1);
 
   let y = 26;
 
-  summary.forEach((s) => {
-    y = checkPageBreak(y, 30);
+  summary.forEach((s, si) => {
+    y = checkPageBreak(y, 30, si, periodLabel);
+    drawRoster(si);
 
     y = drawStaffHeader(y, s);
 
     if (mode === 'week') {
       y = drawTableHeader(y);
       activeDates.forEach((dateStr, di) => {
-        y = checkPageBreak(y, 8);
+        y = checkPageBreak(y, 8, si, periodLabel);
         const log = s.sLogs.find((l) => l.date === dateStr);
         const gross = log ? minutesBetween(log.clock_in, log.clock_out) : null;
         const net = gross != null ? Math.max(0, gross - LUNCH) : null;
@@ -1634,19 +2184,19 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
         );
       });
       // Week total: net hours Monday–Sunday
-      y = checkPageBreak(y, 8);
+      y = checkPageBreak(y, 8, si, periodLabel);
       doc.setFillColor(226, 232, 240);
-      doc.rect(ML, y, TABLE_W, 6.5, 'F');
+      doc.rect(CONTENT_X, y, TABLE_W, 6.5, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(37, 99, 235);
-      doc.text(`Net hours (Mon–Sun): ${fmtHours(s.net)}`, ML + 3, y + 4.5);
+      doc.text(`Net hours (Mon–Sun): ${fmtHours(s.net)}`, CONTENT_X + 3, y + 4.5);
       y += 8;
     } else {
       s.weekBreakdown
         .filter((w) => w.days > 0)
         .forEach((w, wi) => {
-          y = checkPageBreak(y, 20);
+          y = checkPageBreak(y, 20, si, periodLabel);
           y = drawWeekSubHeader(
             y,
             `Week ${wi + 1}: ${fmtDate(w.start)} – ${fmtDate(w.end)}`,
@@ -1662,7 +2212,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
 
             if (isOut && !log) return;
 
-            y = checkPageBreak(y, 8);
+            y = checkPageBreak(y, 8, si, periodLabel);
             const gross = log ? minutesBetween(log.clock_in, log.clock_out) : null;
             const net = gross != null ? Math.max(0, gross - LUNCH) : null;
             const dayName = new Date(`${dateStr}T00:00:00`).toLocaleDateString(
@@ -1687,9 +2237,9 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
           });
         });
 
-      y = checkPageBreak(y, 8);
+      y = checkPageBreak(y, 8, si, periodLabel);
       doc.setFillColor(226, 232, 240); // light total row
-      doc.rect(ML, y, usableW, 6.5, 'F');
+      doc.rect(CONTENT_X, y, TABLE_W, 6.5, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(37, 99, 235); // blue total text
@@ -1697,7 +2247,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
         `TOTAL for ${s.name}:  ${s.days} days   Gross ${fmtHours(
           s.gross,
         )}   −${s.days * LUNCH}m   Net ${fmtHours(s.net)}`,
-        ML + 3,
+        CONTENT_X + 3,
         y + 4.5,
       );
       y += 8;
@@ -1785,8 +2335,7 @@ const Reports = ({ staff, logs }) => {
             sLogs,
             weekBreakdown,
           };
-        })
-        .filter((s) => s.days > 0),
+        }),
     [rangeLogs, staff, weekRanges],
   );
 
@@ -1795,7 +2344,10 @@ const Reports = ({ staff, logs }) => {
 
   const invalidRange = mode === 'range' && rangeStart > rangeEnd;
   const canGenerate =
-    !generating && activeDates.length > 0 && !invalidRange && summary.length > 0;
+    !generating &&
+    activeDates.length > 0 &&
+    !invalidRange &&
+    staff.some((s) => s.active);
 
   const handleDownload = async () => {
     setGenerating(true);
@@ -1979,20 +2531,18 @@ const Reports = ({ staff, logs }) => {
 
       {/* Step 3 — Preview & download */}
       <StepCard num="3" title="Preview & download">
-        {summary.length === 0 &&
-          activeDates.length > 0 &&
-          !invalidRange && (
-            <div
-              style={{
-                color: '#64748b',
-                fontSize: 13,
-                padding: '12px 0',
-              }}
-            >
-              No attendance records found for this period. Try a different date
-              range.
-            </div>
-          )}
+        {activeDates.length > 0 && !invalidRange && summary.length > 0 && totalDays === 0 && (
+          <div
+            style={{
+              color: '#64748b',
+              fontSize: 13,
+              padding: '12px 0',
+            }}
+          >
+            No attendance records found for this period. You can still download a report with the
+            staff list.
+          </div>
+        )}
 
         {summary.length > 0 && (
           <>
