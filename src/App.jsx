@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { supabase } from './supabaseClient';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { localStore } from './localStore';
 
-// ─── DEMO DATA (used only if Supabase is empty) ───────────────────────────────
+// ─── DEFAULT DATA (seeded into local storage on first run) ────────────────────
 const initialStaff = [
   // Imported staff list (company → surname → name)
   { id: '11', name: 'Blaz Maratovic', company: 'Farley', department: '', email: '', active: true, pin: '1011' },
@@ -26,10 +26,11 @@ const initialStaff = [
   { id: '29', name: 'Borut Siraj', company: 'Montpro', department: '', email: '', active: true, pin: '1029' },
   { id: '30', name: 'Boris Debevec', company: 'Montpro', department: '', email: '', active: true, pin: '1030' },
   { id: '31', name: 'Matjaz Kokot', company: 'Montpro', department: '', email: '', active: true, pin: '1031' },
-  { id: '32', name: 'Plamen Petrov', company: 'Montpro', department: '', email: '', active: true, pin: '1032' },
-  { id: '33', name: 'Franc Pucko', company: 'Montpro', department: '', email: '', active: true, pin: '1033' },
+  { id: '99', name: 'Zoltan Szucs', company: 'Montpro', department: '', email: '', active: true, pin: '' },
+  // (leavers removed) Plamen Petrov
+  // (leavers removed) Franc Pucko
   { id: '34', name: 'Mario Krizanac', company: 'Montpro', department: '', email: '', active: true, pin: '1034' },
-  { id: '35', name: 'Dejan Kozel', company: 'Montpro', department: '', email: '', active: true, pin: '1035' },
+  // (leavers removed) Dejan Kozel
   { id: '36', name: 'Tomislav Radovan', company: 'Montpro', department: '', email: '', active: true, pin: '1036' },
   { id: '37', name: 'Denis Doaga', company: 'Montpro', department: '', email: '', active: true, pin: '1037' },
 
@@ -44,6 +45,9 @@ const initialStaff = [
   { id: '46', name: 'Adrian Walaszewski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1046' },
   { id: '47', name: 'Wojciech Grabowski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1047' },
   { id: '48', name: 'Przemyslaw Szymanczak', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1048' },
+  { id: '100', name: 'Kavol Grabowski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
+  { id: '101', name: 'Damien Gónolay', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
+  { id: '102', name: 'Luke Barrett', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
   { id: '49', name: 'Seamus Dowdall', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1049' },
   { id: '50', name: 'Colin Bolton', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1050' },
   { id: '51', name: 'Keith Core', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1051' },
@@ -60,14 +64,14 @@ const initialStaff = [
   { id: '60', name: 'Patryk Myklasz', company: 'BSS', department: '', email: '', active: true, pin: '1060' },
   { id: '61', name: 'J.P Farrell', company: 'BSS', department: '', email: '', active: true, pin: '1061' },
   { id: '62', name: 'Andriy Degtyar', company: 'BSS', department: '', email: '', active: true, pin: '1062' },
-  { id: '63', name: 'Lukasz Szulczyk', company: 'BSS', department: '', email: '', active: true, pin: '1063' },
+  // (leavers removed) Lukasz Szulczyk
   { id: '64', name: 'Giorgi Tchigitashvli', company: 'BSS', department: '', email: '', active: true, pin: '1064' },
   { id: '65', name: 'Shota Marukashvli', company: 'BSS', department: '', email: '', active: true, pin: '1065' },
   { id: '66', name: 'Artur Palonek', company: 'BSS', department: '', email: '', active: true, pin: '1066' },
   { id: '67', name: 'Andesar Kurti', company: 'BSS', department: '', email: '', active: true, pin: '1067' },
   { id: '68', name: 'Mohammed Sabir', company: 'BSS', department: '', email: '', active: true, pin: '1068' },
   { id: '69', name: 'John Pujins', company: 'BSS', department: '', email: '', active: true, pin: '1069' },
-  { id: '70', name: 'Tony Fox', company: 'BSS', department: '', email: '', active: true, pin: '1070' },
+  // (leavers removed) Tony Fox
   { id: '71', name: 'Daniel Bronowicki', company: 'BSS', department: '', email: '', active: true, pin: '1071' },
   { id: '72', name: 'Janis Jursevsris', company: 'BSS', department: '', email: '', active: true, pin: '1072' },
   { id: '73', name: 'Joseph Carribine', company: 'BSS', department: '', email: '', active: true, pin: '1073' },
@@ -78,6 +82,7 @@ const initialStaff = [
   { id: '78', name: 'Anton Kostychencko', company: 'BSS', department: '', email: '', active: true, pin: '1078' },
   { id: '79', name: 'Mark Kelly', company: 'BSS', department: '', email: '', active: true, pin: '1079' },
   { id: '80', name: 'Pavol Brezina', company: 'BSS', department: '', email: '', active: true, pin: '1080' },
+  { id: '98', name: 'Levi Kochadze', company: 'BSS', department: '', email: '', active: true, pin: '' },
 
   { id: '81', name: 'Rafal Gajda', company: 'Troisy', department: '', email: '', active: true, pin: '1081' },
   { id: '82', name: 'Dominik Lagosz', company: 'Troisy', department: '', email: '', active: true, pin: '1082' },
@@ -98,6 +103,9 @@ const initialStaff = [
   { id: '95', name: 'Ciril Royiz', company: 'C.Real', department: '', email: '', active: true, pin: '1095' },
   { id: '96', name: 'Taiye Ajenipu', company: 'C.Real', department: '', email: '', active: true, pin: '1096' },
   { id: '97', name: 'Thom Mitole', company: 'C.Real', department: '', email: '', active: true, pin: '1097' },
+  { id: '103', name: 'Frank Jeffrey', company: 'C.Real', department: '', email: '', active: true, pin: '' },
+  { id: '104', name: 'Innoccent Ubiaia', company: 'C.Real', department: '', email: '', active: true, pin: '' },
+  { id: '105', name: 'Kieran Conlan', company: 'C.Real', department: '', email: '', active: true, pin: '' },
 ];
 
 const getDateStr = (d) => {
@@ -106,6 +114,16 @@ const getDateStr = (d) => {
   const dy = String(d.getDate()).padStart(2, '0');
   return `${yr}-${mo}-${dy}`;
 };
+
+const addDaysToDateStr = (dateStr, days) => {
+  const d = new Date(`${dateStr}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return getDateStr(d);
+};
+
+// Ireland bank holiday (Mon 6th Apr 2026) — used for one-off payroll highlight.
+const BANK_HOLIDAY_DATE = '2026-04-06';
+const BANK_HOLIDAY_NONWORK_MINS = 8 * 60;
 
 const initialLogs = [
   // (demo logs removed)
@@ -158,40 +176,22 @@ export default function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminCreds, setAdminCreds] = useState({ u: '', p: '' });
   const [adminError, setAdminError] = useState('');
-  const [staff, setStaff] = useState(initialStaff);
-  const [logs, setLogs] = useState(initialLogs);
+  const seeded = useMemo(
+    () =>
+      localStore.ensureSeed({
+        initialStaff,
+        initialLogs,
+      }),
+    [],
+  );
+  const [staff, setStaff] = useState(seeded.staff);
+  const [logs, setLogs] = useState(seeded.logs);
+  const didLoadRef = useRef(false);
 
   useEffect(() => {
-    const loadData = async () => {
-      const { data: staffRows, error: staffErr } = await supabase
-        .from('staff')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (!staffErr && staffRows && staffRows.length > 0) {
-        setStaff(staffRows);
-      }
-
-      const { data: logRows, error: logErr } = await supabase
-        .from('time_logs')
-        .select('*')
-        .order('work_date', { ascending: false });
-
-      if (!logErr && logRows) {
-        setLogs(
-          logRows.map((l) => ({
-            id: l.id,
-            staff_id: l.staff_id,
-            clock_in: l.clock_in,
-            clock_out: l.clock_out,
-            date: l.work_date,
-            notes: l.notes || '',
-          })),
-        );
-      }
-    };
-
-    loadData();
+    // React StrictMode runs effects twice in dev; avoid duplicate Supabase calls.
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
   }, []);
 
   const handleAdminLogin = () => {
@@ -249,6 +249,19 @@ export default function App() {
             ⚙️ Admin
           </NavBtn>
         </div>
+      </div>
+
+      <div
+        style={{
+          background: '#0f172a',
+          borderBottom: '1px solid #1e293b',
+          color: '#94a3b8',
+          padding: '8px 24px',
+          fontSize: 12,
+        }}
+      >
+        <b style={{ color: '#e2e8f0' }}>Local mode</b> — staff and clock logs are saved on this
+        device/browser only.
       </div>
 
       {view === 'kiosk' && <KioskView staff={staff} logs={logs} setLogs={setLogs} />}
@@ -340,46 +353,20 @@ const KioskView = ({ staff, logs, setLogs }) => {
     const nowIso = new Date().toISOString();
     const existing = getTodayLog(selected.id);
     if (type === 'in' && !existing) {
-      const { data, error } = await supabase
-        .from('time_logs')
-        .insert({
-          staff_id: selected.id,
-          clock_in: nowIso,
-          clock_out: null,
-          work_date: todayStr2,
-          notes: '',
-        })
-        .select('*')
-        .single();
-      if (!error && data) {
-        setLogs((prev) => [
-          ...prev,
-          {
-            id: data.id,
-            staff_id: data.staff_id,
-            clock_in: data.clock_in,
-            clock_out: data.clock_out,
-            date: data.work_date,
-            notes: data.notes || '',
-          },
-        ]);
-      }
+      const nextLogs = localStore.upsertLogByStaffDate({
+        staff_id: selected.id,
+        date: todayStr2,
+        clock_in: nowIso,
+        clock_out: null,
+        notes: '',
+      });
+      setLogs(nextLogs);
     } else if (type === 'out' && existing && !existing.clock_out) {
-      const { data, error } = await supabase
-        .from('time_logs')
-        .update({ clock_out: nowIso })
-        .eq('id', existing.id)
-        .select('*')
-        .single();
-      if (!error && data) {
-        setLogs((prev) =>
-          prev.map((l) =>
-            l.id === existing.id
-              ? { ...l, clock_out: data.clock_out }
-              : l,
-          ),
-        );
-      }
+      const nextLogs = localStore.upsertLog({
+        ...existing,
+        clock_out: nowIso,
+      });
+      setLogs(nextLogs);
     }
     setStatus({
       type,
@@ -815,6 +802,52 @@ const AdminLogin = ({ creds, setCreds, onLogin, error }) => (
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 const AdminPanel = ({ staff, setStaff, logs, setLogs, onLogout }) => {
   const [tab, setTab] = useState('dashboard');
+  const [backupMsg, setBackupMsg] = useState('');
+  const [importErr, setImportErr] = useState('');
+
+  const exportBackup = () => {
+    const payload = {
+      version: 1,
+      exported_at: new Date().toISOString(),
+      staff,
+      logs,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeDate = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `clocktrack_backup_${safeDate}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setImportErr('');
+    setBackupMsg('Backup downloaded.');
+    setTimeout(() => setBackupMsg(''), 2500);
+  };
+
+  const importBackupFromFile = async (file) => {
+    setBackupMsg('');
+    setImportErr('');
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const nextStaff = Array.isArray(parsed?.staff) ? parsed.staff : null;
+      const nextLogs = Array.isArray(parsed?.logs) ? parsed.logs : null;
+      if (!nextStaff || !nextLogs) {
+        throw new Error('Invalid backup format. Expected { staff: [], logs: [] }.');
+      }
+      localStore.setStaff(nextStaff);
+      localStore.setLogs(nextLogs);
+      setStaff(nextStaff);
+      setLogs(nextLogs);
+      setBackupMsg('Backup imported.');
+      setTimeout(() => setBackupMsg(''), 2500);
+    } catch (e) {
+      setImportErr(e?.message || String(e));
+    }
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 61px)' }}>
@@ -833,6 +866,7 @@ const AdminPanel = ({ staff, setStaff, logs, setLogs, onLogout }) => {
           ['dashboard', '📊 Dashboard'],
           ['clock-logs', '🕐 Clock Logs'],
           ['staff', '👥 Staff'],
+          ['blank-sheets', '📝 Blank signing sheets'],
           ['reports', '📄 Reports'],
         ].map(([t, label]) => (
           <SideBtn key={t} active={tab === t} onClick={() => setTab(t)}>
@@ -857,11 +891,57 @@ const AdminPanel = ({ staff, setStaff, logs, setLogs, onLogout }) => {
           background: '#0f172a',
         }}
       >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            marginBottom: 14,
+          }}
+        >
+          <div style={{ color: '#475569', fontSize: 12 }}>
+            Backups are saved as a <b>.json</b> file on your Mac.
+            {backupMsg && (
+              <span style={{ marginLeft: 10, color: '#4ade80', fontWeight: 700 }}>
+                {backupMsg}
+              </span>
+            )}
+            {importErr && (
+              <span style={{ marginLeft: 10, color: '#f87171', fontWeight: 700 }}>
+                {importErr}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button type="button" onClick={exportBackup} style={PB}>
+              ⬇ Export Backup
+            </button>
+            <label style={{ ...PB, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              ⬆ Import Backup
+              <input
+                type="file"
+                accept="application/json"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  // allow importing same file twice in a row
+                  e.target.value = '';
+                  if (!f) return;
+                  importBackupFromFile(f);
+                }}
+              />
+            </label>
+          </div>
+        </div>
+
         {tab === 'dashboard' && <Dashboard staff={staff} logs={logs} />}
         {tab === 'clock-logs' && (
           <ClockLogsAdmin staff={staff} logs={logs} setLogs={setLogs} />
         )}
-        {tab === 'staff' && <StaffAdmin staff={staff} setStaff={setStaff} />}
+        {tab === 'staff' && <StaffAdmin staff={staff} setStaff={setStaff} logs={logs} setLogs={setLogs} />}
+        {tab === 'blank-sheets' && <BlankSigningSheets staff={staff} />}
         {tab === 'reports' && <Reports staff={staff} logs={logs} />}
       </div>
     </div>
@@ -1016,6 +1096,7 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
     notes: '',
   });
   const [showAdd, setShowAdd] = useState(false);
+  const [showWeek, setShowWeek] = useState(false);
   const [addVals, setAddVals] = useState({
     staff_id: '',
     work_date: getDateStr(new Date()),
@@ -1024,8 +1105,19 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
     notes: '',
   });
   const [addError, setAddError] = useState('');
+  const [weekBase, setWeekBase] = useState(getDateStr(new Date()));
+  const [weekStaffId, setWeekStaffId] = useState('');
+  const [weekRows, setWeekRows] = useState(() =>
+    getWeekDates(new Date()).map((d) => ({ date: d, clock_in: '', clock_out: '', notes: '' })),
+  );
+  const [weekError, setWeekError] = useState('');
+  const [expandedWeeklyStaffId, setExpandedWeeklyStaffId] = useState('');
 
   const dayLogs = logs.filter((l) => l.date === dateFilter);
+  const weekDatesForFilter = useMemo(
+    () => getWeekDates(new Date(`${dateFilter}T12:00:00`)),
+    [dateFilter],
+  );
 
   const openEdit = (log) => {
     setEditLog(log);
@@ -1055,46 +1147,20 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
       notes: editVals.notes,
     };
 
-    const { data, error } = await supabase
-      .from('time_logs')
-      .update({
-        clock_in: next.clock_in,
-        clock_out: next.clock_out,
-        notes: next.notes,
-      })
-      .eq('id', editLog.id)
-      .select('*')
-      .single();
-
-    if (error) {
-      alert(`Failed to save: ${error.message}`);
-      return;
-    }
-
-    setLogs((prev) =>
-      prev.map((l) =>
-        l.id === editLog.id
-          ? {
-              ...l,
-              clock_in: data.clock_in,
-              clock_out: data.clock_out,
-              date: data.work_date,
-              notes: data.notes || '',
-            }
-          : l,
-      ),
-    );
+    const nextLogs = localStore.upsertLog({
+      ...editLog,
+      clock_in: next.clock_in,
+      clock_out: next.clock_out,
+      notes: next.notes,
+    });
+    setLogs(nextLogs);
     setEditLog(null);
   };
 
   const deleteLog = async (log) => {
     if (window.confirm(`Delete record for ${staff.find((s) => s.id === log.staff_id)?.name}?`)) {
-      const { error } = await supabase.from('time_logs').delete().eq('id', log.id);
-      if (error) {
-        alert(`Failed to delete: ${error.message}`);
-        return;
-      }
-      setLogs((prev) => prev.filter((l) => l.id !== log.id));
+      const nextLogs = localStore.deleteLog(log.id);
+      setLogs(nextLogs);
     }
   };
 
@@ -1110,7 +1176,105 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
     setShowAdd(true);
   };
 
-  const saveAdd = async () => {
+  const openWeek = () => {
+    setWeekError('');
+    const base = dateFilter || getDateStr(new Date());
+    setWeekBase(base);
+    const dates = getWeekDates(new Date(`${base}T12:00:00`));
+    setWeekRows(dates.map((d) => ({ date: d, clock_in: '', clock_out: '', notes: '' })));
+    setWeekStaffId('');
+    setShowWeek(true);
+  };
+
+  /** Active staff grouped by company (for dropdowns + Save & Next order) */
+  const activeStaffByCompany = useMemo(() => {
+    const by = new Map();
+    staff
+      .filter((s) => s.active)
+      .forEach((s) => {
+        const c = (s.company || 'Other').trim() || 'Other';
+        if (!by.has(c)) by.set(c, []);
+        by.get(c).push(s);
+      });
+    return [...by.keys()]
+      .sort((a, b) => a.localeCompare(b))
+      .map((company) => ({
+        company,
+        staff: by.get(company).sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+  }, [staff]);
+
+  const activeStaffSorted = useMemo(
+    () => activeStaffByCompany.flatMap((g) => g.staff),
+    [activeStaffByCompany],
+  );
+
+  const loadWeekForStaff = (sid, baseDateStr) => {
+    const dates = getWeekDates(new Date(`${baseDateStr}T12:00:00`));
+    const rows = dates.map((d) => {
+      const existing = logs.find((l) => l.staff_id === sid && l.date === d);
+      return {
+        date: d,
+        clock_in: existing?.clock_in ? new Date(existing.clock_in).toTimeString().slice(0, 5) : '',
+        clock_out: existing?.clock_out ? new Date(existing.clock_out).toTimeString().slice(0, 5) : '',
+        notes: existing?.notes || '',
+      };
+    });
+    setWeekRows(rows);
+  };
+
+  const saveWeek = (mode = 'stay') => {
+    setWeekError('');
+    if (!weekStaffId) {
+      setWeekError('Choose a staff member.');
+      return;
+    }
+
+    const dates = getWeekDates(new Date(`${weekBase}T12:00:00`));
+    const rows = weekRows.map((r, i) => ({ ...r, date: dates[i] || r.date }));
+
+    // Validate and persist each day where at least IN or OUT is present
+    let nextLogs = logs;
+    for (const r of rows) {
+      const hasAny = Boolean(r.clock_in || r.clock_out || r.notes);
+      if (!hasAny) continue;
+      if (!r.clock_in) {
+        setWeekError(`Clock-in required for ${fmtDate(r.date)} if you enter anything that day.`);
+        return;
+      }
+      const clock_in = toISO(r.date, r.clock_in);
+      const clock_out = toISO(r.date, r.clock_out) || null;
+      if (clock_out && clock_out < clock_in) {
+        setWeekError(`Clock-out must be after clock-in for ${fmtDate(r.date)}.`);
+        return;
+      }
+      nextLogs = localStore.upsertLogByStaffDate({
+        staff_id: weekStaffId,
+        date: r.date,
+        clock_in,
+        clock_out,
+        notes: r.notes || '',
+      });
+    }
+
+    setLogs(nextLogs);
+    setExpandedWeeklyStaffId(weekStaffId);
+
+    if (mode === 'next') {
+      const idx = activeStaffSorted.findIndex((s) => s.id === weekStaffId);
+      const next = activeStaffSorted[idx + 1] || activeStaffSorted[0];
+      if (next) {
+        setWeekStaffId(next.id);
+        loadWeekForStaff(next.id, weekBase);
+        setExpandedWeeklyStaffId(next.id);
+      }
+      return;
+    }
+
+    setShowWeek(false);
+  };
+
+  const saveAdd = () => {
     setAddError('');
     if (!addVals.staff_id) {
       setAddError('Choose a staff member.');
@@ -1133,35 +1297,261 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('time_logs')
-      .insert({
-        staff_id: addVals.staff_id,
-        clock_in,
-        clock_out,
-        work_date: addVals.work_date,
-        notes: addVals.notes || '',
-      })
-      .select('*')
-      .single();
-
-    if (error) {
-      setAddError(error.message);
-      return;
-    }
-
-    setLogs((prev) => [
-      {
-        id: data.id,
-        staff_id: data.staff_id,
-        clock_in: data.clock_in,
-        clock_out: data.clock_out,
-        date: data.work_date,
-        notes: data.notes || '',
-      },
-      ...prev,
-    ]);
+    const nextLogs = localStore.upsertLogByStaffDate({
+      staff_id: addVals.staff_id,
+      date: addVals.work_date,
+      clock_in,
+      clock_out,
+      notes: addVals.notes || '',
+    });
+    setLogs(nextLogs);
+    setExpandedWeeklyStaffId(addVals.staff_id);
     setShowAdd(false);
+  };
+
+  /** All active saved staff for this week, plus any orphan log-only staff IDs */
+  const weeklyByStaff = useMemo(() => {
+    const staffById = new Map(staff.map((s) => [s.id, s]));
+    const inWeek = logs.filter((l) => weekDatesForFilter.includes(l.date));
+    const by = new Map();
+    inWeek.forEach((l) => {
+      if (!by.has(l.staff_id)) by.set(l.staff_id, []);
+      by.get(l.staff_id).push(l);
+    });
+
+    const activeIds = new Set(staff.filter((s) => s.active).map((s) => s.id));
+    const allIds = new Set([...activeIds, ...by.keys()]);
+    const bhApplies = weekDatesForFilter[0] === BANK_HOLIDAY_DATE;
+
+    const items = [...allIds].map((staff_id) => {
+      const sLogs = by.get(staff_id) || [];
+      const person = staffById.get(staff_id);
+      const gross = sLogs.reduce(
+        (a, l) => a + (l.clock_out ? minutesBetween(l.clock_in, l.clock_out) : 0),
+        0,
+      );
+      const days = sLogs.filter((l) => l.clock_out).length;
+      const net = Math.max(0, gross - days * 30);
+      const toFillDays = weekDatesForFilter.filter(
+        (d) => !sLogs.some((l) => l.date === d),
+      ).length;
+      const bhLog = bhApplies ? sLogs.find((l) => l.date === BANK_HOLIDAY_DATE) : null;
+      const bhWorkedMins =
+        bhLog?.clock_out ? minutesBetween(bhLog.clock_in, bhLog.clock_out) : 0;
+      const bankHolidayPayMins = bhApplies
+        ? bhWorkedMins > 0
+          ? bhWorkedMins // double pay => additional hours equal to hours worked
+          : days > 0
+            ? BANK_HOLIDAY_NONWORK_MINS // not worked => 8h pay (only if they worked some other day this week)
+            : null
+        : null;
+
+      return {
+        staff_id,
+        person,
+        sLogs,
+        gross,
+        net,
+        days,
+        toFillDays,
+        bankHolidayPayMins,
+        bhWorkedMins,
+      };
+    });
+
+    items.sort((a, b) => {
+      if (b.toFillDays !== a.toFillDays) return b.toFillDays - a.toFillDays;
+      return (a.person?.name || '').localeCompare(b.person?.name || '');
+    });
+
+    return items;
+  }, [logs, staff, weekDatesForFilter]);
+
+  const weeklyByCompany = useMemo(() => {
+    const companyKey = (it) => {
+      if (it.person?.company) return (it.person.company || '').trim() || 'Other';
+      return 'Other';
+    };
+    const groups = new Map();
+    weeklyByStaff.forEach((it) => {
+      const k = companyKey(it);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(it);
+    });
+    return [...groups.keys()]
+      .sort((a, b) => a.localeCompare(b))
+      .map((company) => ({ company, items: groups.get(company) }));
+  }, [weeklyByStaff]);
+
+  const dayLogsByCompany = useMemo(() => {
+    const groups = new Map();
+    dayLogs.forEach((log) => {
+      const p = staff.find((s) => s.id === log.staff_id);
+      const c = (p?.company || 'Other').trim() || 'Other';
+      if (!groups.has(c)) groups.set(c, []);
+      groups.get(c).push(log);
+    });
+    return [...groups.keys()]
+      .sort((a, b) => a.localeCompare(b))
+      .map((company) => ({
+        company,
+        logs: groups.get(company).sort((a, b) => {
+          const na = staff.find((s) => s.id === a.staff_id)?.name || '';
+          const nb = staff.find((s) => s.id === b.staff_id)?.name || '';
+          return na.localeCompare(nb);
+        }),
+      }));
+  }, [dayLogs, staff]);
+
+  const openAddForDay = (staffId, workDate) => {
+    setAddError('');
+    setAddVals({
+      staff_id: staffId,
+      work_date: workDate,
+      clock_in: '',
+      clock_out: '',
+      notes: '',
+    });
+    setShowAdd(true);
+  };
+
+  const openWeekForPerson = (staffId) => {
+    setWeekError('');
+    const base = dateFilter || getDateStr(new Date());
+    setWeekBase(base);
+    setWeekStaffId(staffId);
+    loadWeekForStaff(staffId, base);
+    setShowWeek(true);
+  };
+
+  const WeeklyRow = ({ staffId }) => {
+    const person = staff.find((s) => s.id === staffId);
+    const rows = weekDatesForFilter.map((d) => {
+      const l = logs.find((x) => x.staff_id === staffId && x.date === d);
+      const gross = l?.clock_out ? minutesBetween(l.clock_in, l.clock_out) : 0;
+      const net = l?.clock_out ? Math.max(0, gross - 30) : 0;
+      return { date: d, log: l, gross, net };
+    });
+    const weekGross = rows.reduce((a, r) => a + r.gross, 0);
+    const weekDays = rows.filter((r) => r.log?.clock_out).length;
+    const weekNet = Math.max(0, weekGross - weekDays * 30);
+    const bhApplies = weekDatesForFilter[0] === BANK_HOLIDAY_DATE;
+    const bhRow = bhApplies ? rows.find((r) => r.date === BANK_HOLIDAY_DATE) : null;
+    const bhWorkedMins = bhRow?.log?.clock_out ? bhRow.gross : 0;
+    const bankHolidayPayMins = bhApplies
+      ? bhWorkedMins > 0
+        ? bhWorkedMins
+        : weekDays > 0
+          ? BANK_HOLIDAY_NONWORK_MINS
+          : null
+      : null;
+
+    return (
+      <div style={{ padding: 14, borderTop: '1px solid #0f172a' }}>
+        <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 10 }}>
+          Week totals: <b style={{ color: '#e2e8f0' }}>{fmtHours(weekGross)}</b> gross ·{' '}
+          <b style={{ color: '#f87171' }}>{weekDays * 30}m</b> lunch ·{' '}
+          <b style={{ color: '#a78bfa' }}>{fmtHours(weekNet)}</b> net
+          {bankHolidayPayMins != null && (
+            <>
+              {' '}
+              · <b style={{ color: '#ef4444' }}>Bank Holiday</b>{' '}
+              <b style={{ color: '#fecaca' }}>{fmtHours(bankHolidayPayMins)}</b>
+            </>
+          )}
+        </div>
+        <div style={{ overflow: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
+            <thead>
+              <tr style={{ background: '#0b1220' }}>
+                {['Day', 'Date', 'In', 'Out', 'Gross', 'Lunch', 'Net', 'Notes', 'Actions'].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: '10px 12px',
+                      color: '#64748b',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textAlign: 'left',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const dayName = new Date(`${r.date}T00:00:00`).toLocaleDateString('en-IE', {
+                  weekday: 'short',
+                });
+                const hasOut = Boolean(r.log?.clock_out);
+                const needsFill = !r.log;
+                return (
+                  <tr
+                    key={r.date}
+                    style={{
+                      borderTop: '1px solid #111827',
+                      background: needsFill ? 'rgba(251, 191, 36, 0.06)' : 'transparent',
+                    }}
+                  >
+                    <td style={TD}>{dayName}</td>
+                    <td style={TD}>{fmtDate(r.date)}</td>
+                    <td style={TD}>
+                      {needsFill ? (
+                        <span style={{ color: '#fbbf24', fontSize: 12 }}>To fill</span>
+                      ) : (
+                        <span style={{ color: '#60a5fa' }}>{fmt(r.log?.clock_in)}</span>
+                      )}
+                    </td>
+                    <td style={TD}>
+                      {needsFill ? (
+                        <span style={{ color: '#fbbf24', fontSize: 12 }}>—</span>
+                      ) : (
+                        <span style={{ color: '#4ade80' }}>{fmt(r.log?.clock_out)}</span>
+                      )}
+                    </td>
+                    <td style={TD}>{hasOut ? fmtHours(r.gross) : '—'}</td>
+                    <td style={TD}>{hasOut ? '30m' : '—'}</td>
+                    <td style={TD}>
+                      <span style={{ color: '#a78bfa' }}>{hasOut ? fmtHours(r.net) : '—'}</span>
+                    </td>
+                    <td style={TD}>
+                      <span style={{ color: '#475569', fontSize: 12 }}>{r.log?.notes || ''}</span>
+                    </td>
+                    <td style={TD}>
+                      {r.log ? (
+                        <button
+                          type="button"
+                          onClick={() => openEdit(r.log)}
+                          style={{ ...SB, background: '#1d4ed8' }}
+                        >
+                          Edit
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => openAddForDay(staffId, r.date)}
+                          style={{ ...SB, background: '#854d0e' }}
+                        >
+                          Fill
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {!person && (
+          <div style={{ color: '#f59e0b', fontSize: 12, marginTop: 10 }}>
+            This staff member no longer exists, but logs remain.
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -1182,8 +1572,32 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
           onChange={(e) => setDateFilter(e.target.value)}
           style={{ ...IS, width: 'auto' }}
         />
+        <button
+          type="button"
+          onClick={() => setDateFilter(getDateStr(new Date()))}
+          style={{ ...SB, background: '#0f172a', border: '1px solid #334155' }}
+        >
+          Today
+        </button>
+        <button
+          type="button"
+          onClick={() => setDateFilter((cur) => addDaysToDateStr(cur, -7))}
+          style={{ ...SB, background: '#0f172a', border: '1px solid #334155' }}
+        >
+          ◀ Prev week
+        </button>
+        <button
+          type="button"
+          onClick={() => setDateFilter((cur) => addDaysToDateStr(cur, 7))}
+          style={{ ...SB, background: '#0f172a', border: '1px solid #334155' }}
+        >
+          Next week ▶
+        </button>
         <button type="button" onClick={openAdd} style={{ ...PB, padding: '9px 14px' }}>
           + Manual Entry
+        </button>
+        <button type="button" onClick={openWeek} style={{ ...PB, padding: '9px 14px' }}>
+          + Week Entry
         </button>
         <div style={{ color: '#64748b', fontSize: 13 }}>
           {dayLogs.length} record{dayLogs.length !== 1 ? 's' : ''} for{' '}
@@ -1242,65 +1656,230 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
                 </td>
               </tr>
             )}
-            {dayLogs.map((log) => {
-              const person = staff.find((s) => s.id === log.staff_id);
-              const gross = log.clock_out
-                ? minutesBetween(log.clock_in, log.clock_out)
-                : null;
-              const net = gross != null ? gross - 30 : null;
-
-              return (
-                <tr key={log.id} style={{ borderTop: '1px solid #0f172a' }}>
-                  <td style={TD}>
-                    <b style={{ color: '#f1f5f9' }}>{person?.name || 'Unknown'}</b>
-                  </td>
-                  <td style={TD}>
-                    <span style={{ color: '#64748b', fontSize: 12 }}>
-                      {person?.department}
-                    </span>
-                  </td>
-                  <td style={TD}>
-                    <span style={{ color: '#60a5fa' }}>{fmt(log.clock_in)}</span>
-                  </td>
-                  <td style={TD}>
-                    <span style={{ color: '#4ade80' }}>{fmt(log.clock_out)}</span>
-                  </td>
-                  <td style={TD}>{gross != null ? fmtHours(gross) : '—'}</td>
-                  <td style={TD}>
-                    <span
-                      style={{
-                        color: net != null && net > 0 ? '#a78bfa' : '#f87171',
-                      }}
-                    >
-                      {net != null ? fmtHours(Math.max(0, net)) : '—'}
-                    </span>
-                  </td>
-                  <td style={TD}>
-                    <span style={{ color: '#475569', fontSize: 12 }}>
-                      {log.notes}
-                    </span>
-                  </td>
-                  <td style={TD}>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(log)}
-                      style={{ ...SB, background: '#1d4ed8', marginRight: 6 }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteLog(log)}
-                      style={{ ...SB, background: '#7f1d1d' }}
-                    >
-                      Delete
-                    </button>
+            {dayLogsByCompany.map(({ company, logs: groupLogs }) => (
+              <Fragment key={company}>
+                <tr style={{ background: '#0f172a' }}>
+                  <td
+                    colSpan={8}
+                    style={{
+                      padding: '8px 14px',
+                      color: '#93c5fd',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: 0.3,
+                      borderTop: '1px solid #1e293b',
+                    }}
+                  >
+                    {company}
                   </td>
                 </tr>
-              );
-            })}
+                {groupLogs.map((log) => {
+                  const person = staff.find((s) => s.id === log.staff_id);
+                  const gross = log.clock_out
+                    ? minutesBetween(log.clock_in, log.clock_out)
+                    : null;
+                  const net = gross != null ? gross - 30 : null;
+
+                  return (
+                    <tr key={log.id} style={{ borderTop: '1px solid #0f172a' }}>
+                      <td style={TD}>
+                        <b style={{ color: '#f1f5f9' }}>{person?.name || 'Unknown'}</b>
+                      </td>
+                      <td style={TD}>
+                        <span style={{ color: '#64748b', fontSize: 12 }}>
+                          {person?.department}
+                        </span>
+                      </td>
+                      <td style={TD}>
+                        <span style={{ color: '#60a5fa' }}>{fmt(log.clock_in)}</span>
+                      </td>
+                      <td style={TD}>
+                        <span style={{ color: '#4ade80' }}>{fmt(log.clock_out)}</span>
+                      </td>
+                      <td style={TD}>{gross != null ? fmtHours(gross) : '—'}</td>
+                      <td style={TD}>
+                        <span
+                          style={{
+                            color: net != null && net > 0 ? '#a78bfa' : '#f87171',
+                          }}
+                        >
+                          {net != null ? fmtHours(Math.max(0, net)) : '—'}
+                        </span>
+                      </td>
+                      <td style={TD}>
+                        <span style={{ color: '#475569', fontSize: 12 }}>
+                          {log.notes}
+                        </span>
+                      </td>
+                      <td style={TD}>
+                        <button
+                          type="button"
+                          onClick={() => openEdit(log)}
+                          style={{ ...SB, background: '#1d4ed8', marginRight: 6 }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteLog(log)}
+                          style={{ ...SB, background: '#7f1d1d' }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </Fragment>
+            ))}
           </tbody>
         </table>
+      </div>
+
+      <div
+        style={{
+          marginTop: 16,
+          background: '#1e293b',
+          border: '1px solid #334155',
+          borderRadius: 14,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            padding: '12px 14px',
+            background: '#0f172a',
+            borderBottom: '1px solid #334155',
+            color: '#e2e8f0',
+            fontWeight: 700,
+            fontSize: 13,
+          }}
+        >
+          Weekly logs (Mon–Sun) for {fmtDate(weekDatesForFilter[0])} → {fmtDate(weekDatesForFilter[6])}
+        </div>
+        {weeklyByStaff.length === 0 ? (
+          <div style={{ padding: 14, color: '#64748b', fontSize: 13 }}>
+            Add staff in the Staff tab to see everyone here for the selected week.
+          </div>
+        ) : (
+          weeklyByCompany.map(({ company, items }) => (
+            <div key={company}>
+              <div
+                style={{
+                  padding: '10px 14px',
+                  background: '#0f172a',
+                  borderTop: '1px solid #1e293b',
+                  borderBottom: '1px solid #1e293b',
+                  color: '#93c5fd',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  letterSpacing: 0.4,
+                }}
+              >
+                {company}
+              </div>
+              {items.map((it) => {
+                const open = expandedWeeklyStaffId === it.staff_id;
+                return (
+                  <div key={it.staff_id} style={{ borderTop: '1px solid #0f172a' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        padding: '8px 14px 0',
+                      }}
+                    >
+                      {it.toFillDays > 0 && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: 'rgba(251, 191, 36, 0.15)',
+                            color: '#fbbf24',
+                            border: '1px solid rgba(251, 191, 36, 0.35)',
+                          }}
+                        >
+                          {it.toFillDays} day{it.toFillDays !== 1 ? 's' : ''} to fill
+                        </span>
+                      )}
+                      {it.person && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openWeekForPerson(it.staff_id);
+                          }}
+                          style={{ ...SB, background: '#334155', fontSize: 11 }}
+                        >
+                          Fill week
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedWeeklyStaffId((cur) => (cur === it.staff_id ? '' : it.staff_id))
+                      }
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '12px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ color: '#93c5fd', fontWeight: 700 }}>
+                          {open ? '▾' : '▸'} {it.person?.name || 'Unknown Staff'}
+                        </span>
+                        <span style={{ color: '#475569', fontSize: 12 }}>
+                          {it.person?.department ? it.person.department : ''}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, fontSize: 12, whiteSpace: 'nowrap', alignItems: 'center' }}>
+                        <span style={{ color: '#64748b' }}>{it.days} day{it.days !== 1 ? 's' : ''}</span>
+                        <span style={{ color: '#94a3b8' }}>{fmtHours(it.gross)} gross</span>
+                        <span style={{ color: '#a78bfa', fontWeight: 700 }}>{fmtHours(it.net)} net</span>
+                        {it.bankHolidayPayMins != null && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              padding: '4px 10px',
+                              borderRadius: 999,
+                              background: 'rgba(239, 68, 68, 0.12)',
+                              border: '1px solid rgba(239, 68, 68, 0.35)',
+                              color: '#fecaca',
+                              fontWeight: 700,
+                            }}
+                            title={
+                              it.bhWorkedMins > 0
+                                ? 'Worked on bank holiday: additional pay equals hours worked'
+                                : 'Not worked on bank holiday: 8 hours pay'
+                            }
+                          >
+                            <span style={{ color: '#ef4444', fontWeight: 800 }}>Bank Holiday</span>
+                            <span>{fmtHours(it.bankHolidayPayMins)}</span>
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                    {open && <WeeklyRow staffId={it.staff_id} />}
+                  </div>
+                );
+              })}
+            </div>
+          ))
+        )}
       </div>
 
       {editLog && (
@@ -1362,14 +1941,16 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
               style={{ ...IS, width: '100%', boxSizing: 'border-box' }}
             >
               <option value="">Select staff…</option>
-              {[...staff]
-                .filter((s) => s.active)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.company || '—'}{s.department ? ` · ${s.department}` : ''})
-                  </option>
-                ))}
+              {activeStaffByCompany.map(({ company, staff: list }) => (
+                <optgroup key={company} label={company}>
+                  {list.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                      {s.department ? ` · ${s.department}` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
           <LI
@@ -1406,12 +1987,156 @@ const ClockLogsAdmin = ({ staff, logs, setLogs }) => {
           </div>
         </Modal>
       )}
+
+      {showWeek && (
+        <Modal title="Add Week (Mon–Sun) for Staff" onClose={() => setShowWeek(false)}>
+          <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
+            Enter a full week for one person, then use <b>Save &amp; Next</b> to move through staff.
+          </div>
+
+          <LI
+            label="Pick any date in the week"
+            type="date"
+            value={weekBase}
+            onChange={(v) => {
+              setWeekBase(v);
+              if (weekStaffId) loadWeekForStaff(weekStaffId, v);
+              else {
+                const dates = getWeekDates(new Date(`${v}T12:00:00`));
+                setWeekRows(dates.map((d) => ({ date: d, clock_in: '', clock_out: '', notes: '' })));
+              }
+            }}
+          />
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ color: '#94a3b8', fontSize: 12, marginBottom: 5 }}>
+              Staff Member *
+            </div>
+            <select
+              value={weekStaffId}
+              onChange={(e) => {
+                const sid = e.target.value;
+                setWeekStaffId(sid);
+                if (sid) loadWeekForStaff(sid, weekBase);
+              }}
+              style={{ ...IS, width: '100%', boxSizing: 'border-box' }}
+            >
+              <option value="">Select staff…</option>
+              {activeStaffByCompany.map(({ company, staff: list }) => (
+                <optgroup key={company} label={company}>
+                  {list.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                      {s.department ? ` · ${s.department}` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+
+          <div
+            style={{
+              background: '#0f172a',
+              border: '1px solid #334155',
+              borderRadius: 10,
+              overflow: 'auto',
+              marginBottom: 10,
+            }}
+          >
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+              <thead>
+                <tr style={{ background: '#0b1220' }}>
+                  {['Day', 'Date', 'In', 'Out', 'Notes'].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: '10px 12px',
+                        color: '#64748b',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {weekRows.map((r, i) => {
+                  const dayName = new Date(`${r.date}T00:00:00`).toLocaleDateString('en-IE', {
+                    weekday: 'short',
+                  });
+                  return (
+                    <tr key={r.date} style={{ borderTop: '1px solid #111827' }}>
+                      <td style={TD}>{dayName}</td>
+                      <td style={TD}>{fmtDate(r.date)}</td>
+                      <td style={TD}>
+                        <input
+                          type="time"
+                          value={r.clock_in}
+                          onChange={(e) =>
+                            setWeekRows((prev) =>
+                              prev.map((x, xi) => (xi === i ? { ...x, clock_in: e.target.value } : x)),
+                            )
+                          }
+                          style={{ ...IS, padding: '7px 10px', fontSize: 13, width: 110 }}
+                        />
+                      </td>
+                      <td style={TD}>
+                        <input
+                          type="time"
+                          value={r.clock_out}
+                          onChange={(e) =>
+                            setWeekRows((prev) =>
+                              prev.map((x, xi) => (xi === i ? { ...x, clock_out: e.target.value } : x)),
+                            )
+                          }
+                          style={{ ...IS, padding: '7px 10px', fontSize: 13, width: 110 }}
+                        />
+                      </td>
+                      <td style={TD}>
+                        <input
+                          value={r.notes}
+                          onChange={(e) =>
+                            setWeekRows((prev) =>
+                              prev.map((x, xi) => (xi === i ? { ...x, notes: e.target.value } : x)),
+                            )
+                          }
+                          placeholder="Optional…"
+                          style={{ ...IS, padding: '7px 10px', fontSize: 13, width: '100%' }}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {weekError && <div style={{ color: '#f87171', fontSize: 13 }}>{weekError}</div>}
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => saveWeek('stay')} style={PB}>
+              Save Week
+            </button>
+            <button type="button" onClick={() => saveWeek('next')} style={PB}>
+              Save &amp; Next
+            </button>
+            <button type="button" onClick={() => setShowWeek(false)} style={XB}>
+              Cancel
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
 
 // ─── STAFF ADMIN ──────────────────────────────────────────────────────────────
-const StaffAdmin = ({ staff, setStaff }) => {
+const StaffAdmin = ({ staff, setStaff, setLogs }) => {
   const [showForm, setShowForm] = useState(false);
   const [editPerson, setEditPerson] = useState(null);
   const [form, setForm] = useState({
@@ -1458,32 +2183,24 @@ const StaffAdmin = ({ staff, setStaff }) => {
     if (!form.name.trim()) return;
 
     if (editPerson) {
-      setStaff((prev) =>
-        prev.map((p) => (p.id === editPerson.id ? { ...p, ...form } : p)),
-      );
+      const nextStaff = staff.map((p) => (p.id === editPerson.id ? { ...p, ...form } : p));
+      localStore.setStaff(nextStaff);
+      setStaff(nextStaff);
     } else {
-      setStaff((prev) => [...prev, { id: `s${Date.now()}`, ...form }]);
+      const nextStaff = [...staff, { id: `s${Date.now()}`, ...form, pin: '' }];
+      localStore.setStaff(nextStaff);
+      setStaff(nextStaff);
     }
     setShowForm(false);
   };
 
-  const deleteStaff = async (p) => {
+  const deleteStaff = (p) => {
     const msg = `Delete ${p.name}?\n\nThis will also delete all of their clock logs. This cannot be undone.`;
     if (!window.confirm(msg)) return;
 
-    const { error: logsErr } = await supabase.from('time_logs').delete().eq('staff_id', p.id);
-    if (logsErr) {
-      alert(`Failed to delete clock logs: ${logsErr.message}`);
-      return;
-    }
-
-    const { error: staffErr } = await supabase.from('staff').delete().eq('id', p.id);
-    if (staffErr) {
-      alert(`Failed to delete staff member: ${staffErr.message}`);
-      return;
-    }
-
-    setStaff((prev) => prev.filter((s) => s.id !== p.id));
+    const { staff: nextStaff, logs: nextLogs } = localStore.deleteStaff(p.id);
+    setStaff(nextStaff);
+    setLogs(nextLogs);
   };
 
   return (
@@ -1800,6 +2517,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     const x0 = ML;
     const y0 = 26;
     const bottom = PH - 14;
+    const bhApplies = activeDates[0] === BANK_HOLIDAY_DATE;
 
     const staffCols = [
       { key: 'company', label: 'COMPANY', w: 22 },
@@ -1814,6 +2532,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       { key: 'lunch', label: 'Lunch', w: 10 },
       { key: 'net', label: 'Net Hours', w: 14 },
       { key: 'notes', label: 'Notes', w: 33 },
+      ...(bhApplies ? [{ key: 'bankHoliday', label: 'Bank Holiday', w: 16 }] : []),
     ];
 
     const sheetW =
@@ -1887,8 +2606,17 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
 
       // Totals columns
       totalsCols.forEach((c) => {
-        doc.rect(x, topY, c.w, headerH1 + headerH2);
-        doc.text(c.label, x + 1.2, topY + 8.2);
+        if (c.key === 'bankHoliday') {
+          doc.setFillColor(254, 226, 226); // red-100
+          doc.rect(x, topY, c.w, headerH1 + headerH2, 'F');
+          doc.rect(x, topY, c.w, headerH1 + headerH2);
+          doc.setTextColor(185, 28, 28); // red-700
+          doc.text(c.label, x + 1.2, topY + 8.2);
+          doc.setTextColor(30, 41, 59);
+        } else {
+          doc.rect(x, topY, c.w, headerH1 + headerH2);
+          doc.text(c.label, x + 1.2, topY + 8.2);
+        }
         x += c.w;
       });
 
@@ -2002,16 +2730,40 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
         .join(' / ')
         .slice(0, 70);
 
-      const totalsVals = [fmtHours(weekGrossMins), `${weekLunch}m`, fmtHours(weekNet), notes];
+      const bhLog = bhApplies ? logsByDate.get(BANK_HOLIDAY_DATE) : null;
+      const bhWorkedMins = bhLog?.clock_out ? minutesBetween(bhLog.clock_in, bhLog.clock_out) : 0;
+      const bankHolidayPayMins = bhApplies
+        ? bhWorkedMins > 0
+          ? bhWorkedMins
+          : weekDays > 0
+            ? BANK_HOLIDAY_NONWORK_MINS
+            : null
+        : null;
+
+      const totalsVals = [
+        fmtHours(weekGrossMins),
+        `${weekLunch}m`,
+        fmtHours(weekNet),
+        notes,
+        ...(bhApplies ? [bankHolidayPayMins != null ? fmtHours(bankHolidayPayMins) : ''] : []),
+      ];
       totalsCols.forEach((c, i) => {
         doc.rect(x, y, c.w, rowH);
-        const colorMap = [
-          [148, 163, 184], // gross
-          [248, 113, 113], // lunch
-          [167, 139, 250], // net
-          [71, 85, 105], // notes
-        ];
-        doc.setTextColor(...colorMap[i]);
+        const isBH = c.key === 'bankHoliday';
+        if (isBH) {
+          doc.setFillColor(254, 226, 226);
+          doc.rect(x, y, c.w, rowH, 'F');
+          doc.rect(x, y, c.w, rowH);
+          doc.setTextColor(185, 28, 28);
+        } else {
+          const colorMap = [
+            [148, 163, 184], // gross
+            [248, 113, 113], // lunch
+            [167, 139, 250], // net
+            [71, 85, 105], // notes
+          ];
+          doc.setTextColor(...colorMap[i]);
+        }
         doc.text(String(totalsVals[i] || ''), x + 1.2, y + 4.2);
         x += c.w;
       });
@@ -2264,6 +3016,199 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       : 'report';
 
   doc.save(`clocktrack_report_${safePeriod}.pdf`);
+};
+
+// ─── BLANK SIGN-IN SHEETS (one PDF per company) ────────────────────────────────
+const companyColor = (company) => {
+  const palette = [
+    [37, 99, 235], // blue
+    [79, 70, 229], // indigo
+    [5, 150, 105], // emerald
+    [13, 148, 136], // teal
+    [147, 51, 234], // purple
+    [194, 65, 12], // orange
+    [190, 18, 60], // rose
+    [2, 132, 199], // sky
+  ];
+  const s = String(company || '');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return palette[h % palette.length];
+};
+
+const buildBlankSigningSheetPDF = ({ company, people, weekDates }) => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const PW = 297;
+  const PH = 210;
+  // Tight margins so the grid fills the page.
+  const ML = 6;
+  const MR = 6;
+  const MT = 6;
+  const MB = 8;
+
+  const [cr, cg, cb] = companyColor(company);
+
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const x0 = ML;
+  const headerTop = MT;
+  const y0 = 38; // table start; leaves room for big centered headings
+  const bottom = PH - MB;
+
+  // Bigger, more writable cells.
+  const headerH1 = 12; // day/date
+  const headerH2 = 8; // IN/OUT labels
+
+  // Compute widths to fill page content width.
+  const contentW = PW - ML - MR;
+  const nameW = 70;
+  // Each day has IN, OUT, and Initials boxes.
+  const dayBlockW = (contentW - nameW) / Math.max(1, weekDates.length);
+  const inW = dayBlockW / 3;
+  const outW = dayBlockW / 3;
+  const initW = dayBlockW / 3;
+  const tableW = contentW;
+
+  const usableGridH = bottom - y0 - (headerH1 + headerH2);
+  const baseRowH = 8;
+  const minRowH = 3.5; // smallest that remains writable/printable
+  const rowH =
+    people.length > 0
+      ? Math.max(minRowH, Math.min(baseRowH, usableGridH / people.length))
+      : baseRowH;
+
+  const fmtDayMonth = (dateStr) => {
+    const d = new Date(`${dateStr}T00:00:00`);
+    const day = d.getDate();
+    const month = d.toLocaleDateString('en-IE', { month: 'short' });
+    return `${day} ${month}`;
+  };
+
+  const drawPageHeader = (pageNum) => {
+    // Company bar
+    doc.setFillColor(cr, cg, cb);
+    doc.rect(0, 0, PW, 22, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.setTextColor(255, 255, 255);
+    doc.text(String(company || 'Company').toUpperCase(), PW / 2, 14, { align: 'center' });
+
+    // Title
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text('SIGN IN / SIGN OUT SHEET', PW / 2, 33, { align: 'center' });
+
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(10);
+    doc.text(`Page ${pageNum}`, PW - MR, PH - 5, { align: 'right' });
+    doc.text(`Generated: ${new Date().toLocaleString('en-IE')}`, ML, PH - 5);
+  };
+
+  const drawGridHeader = (topY) => {
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.2);
+
+    // Header band
+    doc.setFillColor(241, 245, 249);
+    doc.rect(x0, topY, tableW, headerH1 + headerH2, 'F');
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+
+    let x = x0;
+
+    // Name column
+    doc.rect(x, topY, nameW, headerH1 + headerH2);
+    doc.text('NAME', x + 2.5, topY + 12);
+    x += nameW;
+
+    // Days
+    weekDates.forEach((ds, i) => {
+      doc.rect(x, topY, dayBlockW, headerH1);
+      doc.setFontSize(11);
+      doc.text([dayNames[i] || '', fmtDayMonth(ds)], x + dayBlockW / 2, topY + 6.0, {
+        align: 'center',
+      });
+      doc.setFontSize(11);
+      doc.rect(x, topY + headerH1, inW, headerH2);
+      doc.rect(x + inW, topY + headerH1, outW, headerH2);
+      doc.rect(x + inW + outW, topY + headerH1, initW, headerH2);
+      doc.setFontSize(10.5);
+      doc.text('IN', x + 2.4, topY + headerH1 + 6.7);
+      doc.text('OUT', x + inW + 2.0, topY + headerH1 + 6.7);
+      doc.text('INIT', x + inW + outW + 2.0, topY + headerH1 + 6.7);
+      x += dayBlockW;
+    });
+  };
+
+  const maxRowsPerPage = Math.max(1, Math.floor((bottom - y0 - (headerH1 + headerH2)) / rowH));
+
+  const drawRows = (startIdx, pageNum) => {
+    drawPageHeader(pageNum);
+    drawGridHeader(y0);
+
+    let y = y0 + headerH1 + headerH2;
+    doc.setFont('helvetica', 'normal');
+    const baseFont = 14; // larger names for print visibility
+    const minFont = 10;
+    // scale text slightly when rows are compressed
+    const fontSize =
+      rowH >= 7.5 ? baseFont : Math.max(minFont, baseFont * (rowH / baseRowH));
+    doc.setFontSize(fontSize);
+    doc.setTextColor(30, 41, 59);
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.15);
+
+    const slice = people.slice(startIdx, startIdx + maxRowsPerPage);
+
+    slice.forEach((p, ri) => {
+      const isAlt = ri % 2 === 1;
+      if (isAlt) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(x0, y, tableW, rowH, 'F');
+      }
+
+      let x = x0;
+      // Name cell
+      doc.rect(x, y, nameW, rowH);
+      doc.text(String(p.name || ''), x + 2, y + rowH * 0.7);
+      x += nameW;
+
+      // Day cells (IN/OUT boxes)
+      weekDates.forEach(() => {
+        doc.rect(x, y, inW, rowH);
+        doc.rect(x + inW, y, outW, rowH);
+        doc.rect(x + inW + outW, y, initW, rowH);
+        x += dayBlockW;
+      });
+      y += rowH;
+    });
+
+    // Outer border
+    doc.setLineWidth(0.2);
+    doc.rect(x0, y0, tableW, headerH1 + headerH2 + slice.length * rowH);
+  };
+
+  // Try to keep each company to a single page if it fits.
+  // If it doesn't, fall back to multi-page rather than making it unreadable.
+  const totalPages =
+    people.length <= maxRowsPerPage ? 1 : Math.ceil(Math.max(1, people.length) / maxRowsPerPage);
+  const safeCompany = String(company || 'company')
+    .trim()
+    .replace(/[^\w]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 60);
+
+  for (let p = 0; p < totalPages; p++) {
+    if (p > 0) doc.addPage();
+    drawRows(p * maxRowsPerPage, p + 1);
+  }
+
+  const safePeriod =
+    weekDates.length > 0 ? `${weekDates[0]}_to_${weekDates[weekDates.length - 1]}` : 'week';
+  doc.save(`clocktrack_blank_signing_sheet_${safeCompany}_${safePeriod}.pdf`);
 };
 
 // ─── REPORTS UI ───────────────────────────────────────────────────────────────
@@ -2722,6 +3667,380 @@ const Reports = ({ staff, logs }) => {
         {activeDates.length === 0 && (
           <div style={{ color: '#475569', fontSize: 13 }}>
             Select dates above to preview the report.
+          </div>
+        )}
+      </StepCard>
+    </div>
+  );
+};
+
+// ─── A1 WALL POSTER (all companies) ───────────────────────────────────────────
+const buildA1WallSigningSheetPDF = ({ companies, peopleByCompany, weekDates }) => {
+  const { jsPDF } = window.jspdf;
+  // A1 landscape in mm (width x height).
+  const PW = 841;
+  const PH = 594;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [PW, PH] });
+
+  const ML = 12;
+  const MR = 12;
+  const MT = 12;
+  const MB = 12;
+
+  const contentW = PW - ML - MR;
+  const contentH = PH - MT - MB;
+
+  const headerBarH = 20;
+  const titleH = 18;
+  const topH = headerBarH + titleH;
+
+  const nameW = 120;
+  const dayBlockW = (contentW - nameW) / Math.max(1, weekDates.length);
+  const inW = dayBlockW / 3;
+  const outW = dayBlockW / 3;
+  const initW = dayBlockW / 3;
+
+  const headerH1 = 16;
+  const headerH2 = 10;
+  const sectionTitleH = 12;
+  const rowH = 10;
+  const gapH = 10;
+
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const fmtDayMonth = (dateStr) => {
+    const d = new Date(`${dateStr}T00:00:00`);
+    const day = d.getDate();
+    const month = d.toLocaleDateString('en-IE', { month: 'short' });
+    return `${day} ${month}`;
+  };
+
+  let pageNum = 1;
+  const drawPageHeader = () => {
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, PW, headerBarH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.setTextColor(241, 245, 249);
+    doc.text('SIGN IN / SIGN OUT SHEET — ALL TRADES', PW / 2, 13.5, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(15);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Week: ${fmtDate(weekDates[0])} → ${fmtDate(weekDates[6])}`, PW / 2, 31, {
+      align: 'center',
+    });
+
+    doc.setFontSize(12);
+    doc.text(`Page ${pageNum}`, PW - MR, PH - 6, { align: 'right' });
+  };
+
+  const drawGridHeader = (x0, topY) => {
+    const tableW = nameW + weekDates.length * dayBlockW;
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.3);
+    doc.setFillColor(241, 245, 249);
+    doc.rect(x0, topY, tableW, headerH1 + headerH2, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+
+    let x = x0;
+    doc.rect(x, topY, nameW, headerH1 + headerH2);
+    doc.text('NAME', x + 4, topY + 12.8);
+    x += nameW;
+
+    weekDates.forEach((ds, i) => {
+      doc.rect(x, topY, dayBlockW, headerH1);
+      doc.setFontSize(13);
+      doc.text([dayNames[i] || '', fmtDayMonth(ds)], x + dayBlockW / 2, topY + 7.0, {
+        align: 'center',
+      });
+      doc.setFontSize(13);
+      doc.rect(x, topY + headerH1, inW, headerH2);
+      doc.rect(x + inW, topY + headerH1, outW, headerH2);
+      doc.rect(x + inW + outW, topY + headerH1, initW, headerH2);
+      doc.setFontSize(12);
+      doc.text('IN', x + 4, topY + headerH1 + 7.5);
+      doc.text('OUT', x + inW + 3.2, topY + headerH1 + 7.5);
+      doc.text('INIT', x + inW + outW + 3.2, topY + headerH1 + 7.5);
+      x += dayBlockW;
+    });
+  };
+
+  const newPage = () => {
+    if (pageNum > 1) doc.addPage();
+    drawPageHeader();
+    return MT + topH;
+  };
+
+  let y = newPage();
+  const x0 = ML;
+
+  for (const company of companies) {
+    const people = peopleByCompany.get(company) || [];
+    if (people.length === 0) continue;
+
+    const sectionH = sectionTitleH + (headerH1 + headerH2) + people.length * rowH + gapH;
+    if (y + sectionH > PH - MB) {
+      pageNum += 1;
+      y = newPage();
+    }
+
+    const [cr, cg, cb] = companyColor(company);
+    doc.setFillColor(cr, cg, cb);
+    doc.rect(x0, y, contentW, sectionTitleH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text(String(company || '').toUpperCase(), x0 + 4, y + 8.5);
+    doc.setTextColor(226, 232, 240);
+    doc.setFontSize(14);
+    doc.text(`${people.length} staff`, x0 + contentW - 4, y + 8.5, { align: 'right' });
+
+    y += sectionTitleH;
+
+    drawGridHeader(x0, y);
+    y += headerH1 + headerH2;
+
+    // rows
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(16); // larger names for wall visibility
+    doc.setTextColor(30, 41, 59);
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.2);
+
+    people.forEach((p, idx) => {
+      const isAlt = idx % 2 === 1;
+      if (isAlt) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(x0, y, contentW, rowH, 'F');
+      }
+
+      let x = x0;
+      doc.rect(x, y, nameW, rowH);
+      doc.text(String(p.name || ''), x + 3, y + rowH * 0.7);
+      x += nameW;
+
+      weekDates.forEach(() => {
+        doc.rect(x, y, inW, rowH);
+        doc.rect(x + inW, y, outW, rowH);
+        doc.rect(x + inW + outW, y, initW, rowH);
+        x += dayBlockW;
+      });
+
+      y += rowH;
+    });
+
+    y += gapH;
+  }
+
+  doc.save(`clocktrack_a1_wall_signing_sheet_${weekDates[0]}_to_${weekDates[6]}.pdf`);
+};
+
+// ─── BLANK SIGNING SHEETS UI ──────────────────────────────────────────────────
+const BlankSigningSheets = ({ staff }) => {
+  const [weekBase, setWeekBase] = useState(getDateStr(new Date()));
+  const [downloading, setDownloading] = useState(false);
+
+  const weekDates = useMemo(() => getWeekDates(new Date(`${weekBase}T12:00:00`)), [weekBase]);
+
+  const companies = useMemo(() => {
+    const set = new Set(
+      staff
+        .filter((s) => s.active)
+        .map((s) => String(s.company || '').trim())
+        .filter(Boolean),
+    );
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [staff]);
+
+  const peopleByCompany = useMemo(() => {
+    const by = new Map();
+    staff
+      .filter((s) => s.active)
+      .forEach((s) => {
+        const c = String(s.company || '').trim();
+        if (!c) return;
+        if (!by.has(c)) by.set(c, []);
+        by.get(c).push(s);
+      });
+    for (const [c, arr] of by.entries()) {
+      arr.sort((a, b) =>
+        String(a.name || '').toLowerCase().localeCompare(String(b.name || '').toLowerCase()),
+      );
+      by.set(c, arr);
+    }
+    return by;
+  }, [staff]);
+
+  const downloadCompany = async (company) => {
+    setDownloading(true);
+    await new Promise((r) => setTimeout(r, 50));
+    try {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library is not available. Please refresh the page and try again.');
+        setDownloading(false);
+        return;
+      }
+      const people = peopleByCompany.get(company) || [];
+      buildBlankSigningSheetPDF({ company, people, weekDates });
+    } catch (e) {
+      alert(`PDF error: ${e.message}`);
+    }
+    setDownloading(false);
+  };
+
+  const downloadAll = async () => {
+    if (companies.length === 0) return;
+    setDownloading(true);
+    await new Promise((r) => setTimeout(r, 50));
+    try {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library is not available. Please refresh the page and try again.');
+        setDownloading(false);
+        return;
+      }
+      for (const company of companies) {
+        const people = peopleByCompany.get(company) || [];
+        buildBlankSigningSheetPDF({ company, people, weekDates });
+        // allow browser a tick between downloads
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    } catch (e) {
+      alert(`PDF error: ${e.message}`);
+    }
+    setDownloading(false);
+  };
+
+  const downloadA1Wall = async () => {
+    if (companies.length === 0) return;
+    setDownloading(true);
+    await new Promise((r) => setTimeout(r, 50));
+    try {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library is not available. Please refresh the page and try again.');
+        setDownloading(false);
+        return;
+      }
+      buildA1WallSigningSheetPDF({ companies, peopleByCompany, weekDates });
+    } catch (e) {
+      alert(`PDF error: ${e.message}`);
+    }
+    setDownloading(false);
+  };
+
+  return (
+    <div style={{ maxWidth: 820 }}>
+      <PageTitle>Blank signing sheets</PageTitle>
+      <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
+        Generates a blank Monday–Sunday sign in/out sheet (one PDF per company) for staff to sign
+        physically.
+      </div>
+
+      <StepCard num="1" title="Pick the week">
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ color: '#64748b', fontSize: 12, marginBottom: 6 }}>
+              Pick any date in the week
+            </div>
+            <input
+              type="date"
+              value={weekBase}
+              onChange={(e) => setWeekBase(e.target.value)}
+              style={{ ...IS, width: 'auto' }}
+            />
+          </div>
+          {weekDates.length > 0 && (
+            <div
+              style={{
+                background: '#0f172a',
+                border: '1px solid #334155',
+                borderRadius: 8,
+                padding: '10px 16px',
+                fontSize: 13,
+                color: '#94a3b8',
+              }}
+            >
+              Week:{' '}
+              <b style={{ color: '#f1f5f9' }}>{fmtDate(weekDates[0])}</b> →{' '}
+              <b style={{ color: '#f1f5f9' }}>{fmtDate(weekDates[6])}</b>
+            </div>
+          )}
+        </div>
+      </StepCard>
+
+      <StepCard
+        num="2"
+        title={`Download PDFs (${companies.length} compan${companies.length === 1 ? 'y' : 'ies'})`}
+      >
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+          <button type="button" onClick={downloadAll} style={PB} disabled={downloading}>
+            ⬇ Download all companies
+          </button>
+          <button type="button" onClick={downloadA1Wall} style={PB} disabled={downloading}>
+            🧾 Download A1 wall sheet (all trades)
+          </button>
+          {downloading && (
+            <span style={{ color: '#94a3b8', fontSize: 13, alignSelf: 'center' }}>
+              Generating PDFs…
+            </span>
+          )}
+        </div>
+
+        {companies.length === 0 ? (
+          <div style={{ color: '#94a3b8', fontSize: 13 }}>
+            No active staff with a company set. Add a company value in Admin → Staff.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {companies.map((c) => {
+              const [r, g, b] = companyColor(c);
+              const count = (peopleByCompany.get(c) || []).length;
+              return (
+                <div
+                  key={c}
+                  style={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: 14,
+                    padding: 14,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 3,
+                        background: `rgb(${r},${g},${b})`,
+                      }}
+                    />
+                    <div style={{ color: '#f1f5f9', fontWeight: 800 }}>{c}</div>
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 6 }}>
+                    {count} active staff
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <button
+                      type="button"
+                      onClick={() => downloadCompany(c)}
+                      style={PB}
+                      disabled={downloading}
+                    >
+                      ⬇ Download PDF
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </StepCard>
