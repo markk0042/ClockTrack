@@ -95,20 +95,6 @@ const mergeStaffUnique = (base, incoming) => {
   return Array.from(byKey.values());
 };
 
-const applyLeaversInactive = (staff, leaverNames) => {
-  const set = new Set((leaverNames || []).map(norm).filter(Boolean));
-  if (set.size === 0) return staff;
-  let changed = false;
-  const next = staff.map((p) => {
-    if (set.has(norm(p.name)) && p.active !== false) {
-      changed = true;
-      return { ...p, active: false };
-    }
-    return p;
-  });
-  return changed ? next : staff;
-};
-
 export const localStore = {
   // ---- Staff ----
   getStaff(fallback = []) {
@@ -199,12 +185,17 @@ export const localStore = {
         this.setStaff(withDefaults);
       }
 
-      // Apply leavers list (keeps old logs intact, removes from active views/sheets).
-      const leavers = ['Tony Fox', 'Plamen Petrov', 'Franc Pucko', 'Dejan Kozel', 'Lukasz Szulczyk'];
-      const afterDefaults = this.getStaff(initialStaff);
-      const withLeaversInactive = applyLeaversInactive(afterDefaults, leavers);
-      if (withLeaversInactive !== afterDefaults) {
-        this.setStaff(withLeaversInactive);
+      // One-time: undo the old "auto inactivate leavers" so Staff matches your roster (deactivate in Admin if needed).
+      const CLEARED = 'clocktrack.clearedLeaverInactivity.v1';
+      if (!localStorage.getItem(CLEARED)) {
+        const former = ['Tony Fox', 'Plamen Petrov', 'Franc Pucko', 'Dejan Kozel', 'Lukasz Szulczyk'].map(
+          (n) => norm(n),
+        );
+        const sset = new Set(former);
+        const cur = this.getStaff(initialStaff);
+        const next = cur.map((p) => (sset.has(norm(p.name)) ? { ...p, active: true } : p));
+        this.setStaff(next);
+        localStorage.setItem(CLEARED, '1');
       }
     } catch {
       // ignore

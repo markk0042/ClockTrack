@@ -2216,7 +2216,13 @@ const StaffAdmin = ({ staff, setStaff, setLogs }) => {
         }}
       >
         <PageTitle style={{ margin: 0 }}>
-          Staff ({staff.filter((s) => s.active).length} active / {staff.length} total)
+          {(() => {
+            const n = staff.length;
+            const a = staff.filter((s) => s.active).length;
+            if (n === 0) return 'Staff';
+            if (a === n) return `Staff (${n} total)`;
+            return `Staff (${a} active / ${n} total)`;
+          })()}
         </PageTitle>
         <button type="button" onClick={openAdd} style={PB}>
           + Add Staff Member
@@ -2523,6 +2529,7 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       { key: 'company', label: 'COMPANY', w: 22 },
       { key: 'surname', label: 'SURNAME', w: 26 },
       { key: 'name', label: 'NAME', w: 22 },
+      { key: 'net', label: 'NET', w: 14 },
     ];
     const dayBlockW = 16; // IN + OUT (8mm each)
     const inW = 8;
@@ -2530,7 +2537,6 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
     const totalsCols = [
       { key: 'gross', label: 'Gross', w: 14 },
       { key: 'lunch', label: 'Lunch', w: 10 },
-      { key: 'net', label: 'Net Hours', w: 14 },
       { key: 'notes', label: 'Notes', w: 33 },
       ...(bhApplies ? [{ key: 'bankHoliday', label: 'Bank Holiday', w: 16 }] : []),
     ];
@@ -2647,6 +2653,11 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       return (a.name || '').localeCompare(b.name || '');
     });
 
+    let reportGrossMins = 0;
+    let reportLunchMins = 0;
+    let reportNetMins = 0;
+    let reportBhMins = 0;
+
     const companyColor = (companyName) => {
       const key = String(companyName || '').trim().toLowerCase();
       const preset = {
@@ -2677,12 +2688,30 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       doc.setDrawColor(203, 213, 225);
       doc.setLineWidth(0.15);
 
-      // Fixed staff columns
+      // Compute weekly totals first (so Net Hours can sit beside the name)
+      const logsByDate = new Map((s.sLogs || []).map((l) => [l.date, l]));
+      let weekGrossMins = 0;
+      let weekDays = 0;
+      const weekNotes = [];
+      activeDates.forEach((ds) => {
+        const log = logsByDate.get(ds);
+        const hasOut = Boolean(log?.clock_out);
+        const gross = hasOut ? minutesBetween(log.clock_in, log.clock_out) : 0;
+        if (hasOut) {
+          weekGrossMins += gross;
+          weekDays += 1;
+        }
+        if (log?.notes) weekNotes.push(log.notes);
+      });
+      const weekLunch = weekDays * LUNCH;
+      const weekNet = Math.max(0, weekGrossMins - weekLunch);
+
+      // Fixed staff columns (company/surname/name/net)
       const company = s.company || '';
       const surname = getSurname(s.name);
       const firstname = getFirstName(s.name);
 
-      const staffVals = [company, surname, firstname];
+      const staffVals = [company, surname, firstname, fmtHours(weekNet)];
       staffCols.forEach((c, i) => {
         if (i === 0) {
           const [r, g, b] = companyColor(company);
@@ -2696,20 +2725,8 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       });
 
       // Day cells (IN/OUT)
-      const logsByDate = new Map((s.sLogs || []).map((l) => [l.date, l]));
-      let weekGrossMins = 0;
-      let weekDays = 0;
-      const weekNotes = [];
-
       activeDates.forEach((ds) => {
         const log = logsByDate.get(ds);
-        const hasOut = Boolean(log?.clock_out);
-        const gross = hasOut ? minutesBetween(log.clock_in, log.clock_out) : 0;
-        if (hasOut) {
-          weekGrossMins += gross;
-          weekDays += 1;
-        }
-        if (log?.notes) weekNotes.push(log.notes);
 
         // IN
         doc.rect(x, y, inW, rowH);
@@ -2724,8 +2741,10 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
       });
 
       // Totals
-      const weekLunch = weekDays * LUNCH;
-      const weekNet = Math.max(0, weekGrossMins - weekLunch);
+      reportGrossMins += weekGrossMins;
+      reportLunchMins += weekLunch;
+      reportNetMins += weekNet;
+
       const notes = Array.from(new Set(weekNotes))
         .join(' / ')
         .slice(0, 70);
@@ -2739,11 +2758,13 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
             ? BANK_HOLIDAY_NONWORK_MINS
             : null
         : null;
+      if (bhApplies && bankHolidayPayMins != null) {
+        reportBhMins += bankHolidayPayMins;
+      }
 
       const totalsVals = [
         fmtHours(weekGrossMins),
         `${weekLunch}m`,
-        fmtHours(weekNet),
         notes,
         ...(bhApplies ? [bankHolidayPayMins != null ? fmtHours(bankHolidayPayMins) : ''] : []),
       ];
@@ -2759,7 +2780,6 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
           const colorMap = [
             [148, 163, 184], // gross
             [248, 113, 113], // lunch
-            [167, 139, 250], // net
             [71, 85, 105], // notes
           ];
           doc.setTextColor(...colorMap[i]);
@@ -2770,6 +2790,65 @@ const buildPDF = (summary, activeDates, weekRanges, mode, rangeStart, rangeEnd, 
 
       y += rowH;
     });
+
+    if (rows.length > 0) {
+      if (y + rowH > maxY) startNewPage();
+      let x = x0;
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+
+      const reportTotalsVals = [
+        fmtHours(reportGrossMins),
+        `${reportLunchMins}m`,
+        '', // notes
+        ...(bhApplies ? [reportBhMins > 0 ? fmtHours(reportBhMins) : ''] : []),
+      ];
+
+      const labelCells = ['All staff (total)', '', '', ''];
+      staffCols.forEach((c, i) => {
+        doc.setFillColor(226, 232, 240);
+        doc.rect(x, y, c.w, rowH, 'F');
+        doc.setDrawColor(203, 213, 225);
+        doc.rect(x, y, c.w, rowH);
+        doc.setTextColor(37, 99, 235);
+        const t = String(labelCells[i] || '');
+        doc.text(t.length > 20 ? `${t.slice(0, 18)}…` : t, x + 1.2, y + 4.2);
+        x += c.w;
+      });
+
+      activeDates.forEach(() => {
+        doc.setFillColor(241, 245, 249);
+        doc.rect(x, y, inW, rowH, 'F');
+        doc.rect(x + inW, y, outW, rowH, 'F');
+        x += dayBlockW;
+      });
+
+      totalsCols.forEach((c, i) => {
+        doc.setFillColor(226, 232, 240);
+        doc.rect(x, y, c.w, rowH, 'F');
+        doc.setDrawColor(203, 213, 225);
+        doc.rect(x, y, c.w, rowH);
+        const isBH = c.key === 'bankHoliday';
+        if (isBH) {
+          doc.setTextColor(185, 28, 28);
+        } else {
+          const colorMap = [
+            [30, 64, 175],
+            [30, 64, 175],
+            [100, 116, 139],
+          ];
+          doc.setTextColor(...(colorMap[i] || [100, 116, 139]));
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(reportTotalsVals[i] || ''), x + 1.2, y + 4.2);
+        x += c.w;
+      });
+
+      doc.setFont('helvetica', 'normal');
+      y += rowH;
+    }
 
     addPageNum();
   };
@@ -3839,20 +3918,28 @@ const buildA1WallSigningSheetPDF = ({ companies, peopleByCompany, weekDates }) =
 };
 
 // ─── BLANK SIGNING SHEETS UI ──────────────────────────────────────────────────
+/** Active staff with no company are grouped here so PDFs list the same people as Admin → Staff (active). */
+const BLANK_SIGNING_SHEET_NO_COMPANY = 'Unassigned';
+
 const BlankSigningSheets = ({ staff }) => {
   const [weekBase, setWeekBase] = useState(getDateStr(new Date()));
   const [downloading, setDownloading] = useState(false);
 
   const weekDates = useMemo(() => getWeekDates(new Date(`${weekBase}T12:00:00`)), [weekBase]);
+  const activeCount = useMemo(() => staff.filter((s) => s.active).length, [staff]);
 
   const companies = useMemo(() => {
-    const set = new Set(
-      staff
-        .filter((s) => s.active)
-        .map((s) => String(s.company || '').trim())
-        .filter(Boolean),
-    );
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
+    const active = staff.filter((s) => s.active);
+    const withCompany = new Set();
+    let hasNoCompany = false;
+    for (const s of active) {
+      const c = String(s.company || '').trim();
+      if (c) withCompany.add(c);
+      else hasNoCompany = true;
+    }
+    const list = Array.from(withCompany).sort((a, b) => a.localeCompare(b));
+    if (hasNoCompany) list.push(BLANK_SIGNING_SHEET_NO_COMPANY);
+    return list;
   }, [staff]);
 
   const peopleByCompany = useMemo(() => {
@@ -3861,9 +3948,9 @@ const BlankSigningSheets = ({ staff }) => {
       .filter((s) => s.active)
       .forEach((s) => {
         const c = String(s.company || '').trim();
-        if (!c) return;
-        if (!by.has(c)) by.set(c, []);
-        by.get(c).push(s);
+        const key = c || BLANK_SIGNING_SHEET_NO_COMPANY;
+        if (!by.has(key)) by.set(key, []);
+        by.get(key).push(s);
       });
     for (const [c, arr] of by.entries()) {
       arr.sort((a, b) =>
@@ -3975,6 +4062,25 @@ const BlankSigningSheets = ({ staff }) => {
         num="2"
         title={`Download PDFs (${companies.length} compan${companies.length === 1 ? 'y' : 'ies'})`}
       >
+        <div
+          style={{
+            background: '#0f172a',
+            border: '1px solid #334155',
+            borderRadius: 12,
+            padding: '10px 12px',
+            color: '#94a3b8',
+            fontSize: 13,
+            marginBottom: 14,
+          }}
+        >
+          Active staff included in sheets:{' '}
+          <b style={{ color: activeCount === 100 ? '#4ade80' : '#fbbf24' }}>{activeCount}</b>
+          {activeCount !== 100 && (
+            <span style={{ marginLeft: 8, color: '#fbbf24' }}>
+              (expected 100 — update Admin → Staff, or import the latest backup)
+            </span>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
           <button type="button" onClick={downloadAll} style={PB} disabled={downloading}>
             ⬇ Download all companies
@@ -3991,7 +4097,7 @@ const BlankSigningSheets = ({ staff }) => {
 
         {companies.length === 0 ? (
           <div style={{ color: '#94a3b8', fontSize: 13 }}>
-            No active staff with a company set. Add a company value in Admin → Staff.
+            No active staff. Add or activate people in Admin → Staff.
           </div>
         ) : (
           <div
