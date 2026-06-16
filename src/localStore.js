@@ -114,7 +114,7 @@ const REMOVED_STAFF_NAME_TOKENS = new Set(
     'Jason Beggs',
     'Martin Plotnika',
     'Inoccent',
-    'Christopher Cole',
+    'Innoccent Ubiaia',
     'Thom Mitole',
     'Janis Jursevsris',
     'John Pujins',
@@ -122,8 +122,59 @@ const REMOVED_STAFF_NAME_TOKENS = new Set(
     'Eric Byrne',
     'Karol G',
     'Gonolagh Damien',
+    'Damien Gónolay',
+    'Giorgi Tchigitashvli',
+    'Martynaz Vitkauskas',
+    'Boris Debevec',
+    'Denis Doaga',
+    'Ciril Royiz',
+    'Gregorz Rudnik',
+    'Zolthan S',
+    'Zoltan Szucs',
+    'Innocent Ubah',
+    'Kieran Conlan',
+    'Daviti Bobokhidze',
+    'Filip Mirga',
+    'Giorgi Balakhadze',
+    'Karel Vingler',
+    "Liam O'Connor",
+    'Radek Sopr',
+    'Rokas Marciulionis',
+    'Zonas Petrikauskas',
+    'Renata Grigalionyte',
+    'Davit Guzarauli',
+    'Grzegorz Rudnik',
+    'Nino Hardi',
+    'Rory Daly',
+    'Gavin Neary',
+    'Przemyslaw Szymanczak',
+    'Robert Celinski',
   ].map((n) => nameTokens(n)),
 );
+
+/** Rename existing saved rows to match Sign in sheet DD26 (preserves staff id / logs). */
+const ROSTER_DD26_NAME_FIXES = [
+  { from: 'Innoccent Ubiaia', to: 'Innocent Ubah', company: 'C.Real' },
+  { from: 'Ciril Royiz', to: 'Ciril Rogic', company: 'C.Real' },
+  { from: 'Gregorz Rudnik', to: 'Grzegorz Rudnik', company: 'DNW' },
+  { from: 'Damien Gónolay', to: 'Damien Goralczyk', company: 'Shadow HVAC' },
+  { from: 'Damien Gonolay', to: 'Damien Goralczyk', company: 'Shadow HVAC' },
+  { from: 'Zolthan S', to: 'Zolthan Szucs', company: 'Montpro' },
+  { from: 'Zoltan Szucs', to: 'Zolthan Szucs', company: 'Montpro' },
+];
+
+const applyRosterNameFixes = (staff) =>
+  staff.map((p) => {
+    for (const fix of ROSTER_DD26_NAME_FIXES) {
+      if (nameTokens(p.name) === nameTokens(fix.from) && norm(p.company) === norm(fix.company)) {
+        return { ...p, name: fix.to, company: fix.company };
+      }
+    }
+    if (nameTokens(p.name) === nameTokens('Frank Jeffrey') && norm(p.company) === norm('C.Real')) {
+      return { ...p, name: 'Frank Jeffrey' };
+    }
+    return p;
+  });
 
 /** Typo-only rows (not the full legal name). */
 const INOCCENT_TYPO_TOKEN = nameTokens('Inoccent');
@@ -310,6 +361,45 @@ export const localStore = {
           if (merged.length > cur.length) this.setStaff(merged);
         }
         localStorage.setItem(RESTORE_DAMIEN, '1');
+      }
+
+      // Sign in sheet DD26 (week Mon 18 May 2026): full roster sync.
+      const ROSTER_DD26 = 'clocktrack.rosterUpdateDD26May2026.v1';
+      if (!localStorage.getItem(ROSTER_DD26)) {
+        const allowed = new Set(initialStaff.map((p) => staffMergeKey(p)));
+        let cur = applyRosterNameFixes(this.getStaff(initialStaff));
+        cur = cur.filter((p) => allowed.has(staffMergeKey(p)) && !isRemovedStaff(p));
+        const merged = mergeStaffUnique(cur, initialStaff);
+        const cleaned = dedupeStaff(merged)
+          .filter((p) => allowed.has(staffMergeKey(p)) && !isRemovedStaff(p));
+        this.setStaff(cleaned);
+        localStorage.setItem(ROSTER_DD26, '1');
+      }
+
+      // Jun 2026 roster: Montpro/BSS/Farley additions; C.Real & Mor-Air removals.
+      const ROSTER_JUN2026 = 'clocktrack.rosterUpdateJun2026.v1';
+      if (!localStorage.getItem(ROSTER_JUN2026)) {
+        const allowed = new Set(initialStaff.map((p) => staffMergeKey(p)));
+        let cur = applyRosterNameFixes(this.getStaff(initialStaff));
+        cur = cur.filter((p) => allowed.has(staffMergeKey(p)) && !isRemovedStaff(p));
+        const merged = mergeStaffUnique(cur, initialStaff);
+        const cleaned = dedupeStaff(merged)
+          .filter((p) => allowed.has(staffMergeKey(p)) && !isRemovedStaff(p));
+        this.setStaff(cleaned);
+        localStorage.setItem(ROSTER_JUN2026, '1');
+      }
+
+      // 11 Jun 2026: synced from Admin staff edits (BIS/BSS adds, DNW/Daldrop removed).
+      const ROSTER_JUN11 = 'clocktrack.rosterUpdateJun11_2026.v1';
+      if (!localStorage.getItem(ROSTER_JUN11)) {
+        const allowed = new Set(initialStaff.map((p) => staffMergeKey(p)));
+        let cur = applyRosterNameFixes(this.getStaff(initialStaff));
+        cur = cur.filter((p) => allowed.has(staffMergeKey(p)) && !isRemovedStaff(p));
+        const merged = mergeStaffUnique(cur, initialStaff);
+        const cleaned = dedupeStaff(merged)
+          .filter((p) => allowed.has(staffMergeKey(p)) && !isRemovedStaff(p));
+        this.setStaff(cleaned);
+        localStorage.setItem(ROSTER_JUN11, '1');
       }
     } catch {
       // ignore

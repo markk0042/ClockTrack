@@ -3,24 +3,24 @@ import { dedupeStaff, localStore } from './localStore';
 
 // ─── DEFAULT DATA (seeded into local storage on first run) ────────────────────
 const initialStaff = [
-  // Canonical roster — duplicates & leavers removed; includes DNW & Mor-Air
-  // Synced from clocktrack_backup_2026-05-15-2.json (101 active)
-  // Unassigned
-  // BIS
+  // Canonical roster — synced from localhost 2026-06-11 (92 active)
+  // BIS (6)
+  { id: 's1781182752805', name: 'Darren Tighe', company: 'BIS', department: '', email: '', active: true, pin: '' },
+  { id: 's1781182793201', name: 'Deividas Medelinslias', company: 'BIS', department: '', email: '', active: true, pin: '' },
+  { id: 's1781182735374', name: 'George Flynn', company: 'BIS', department: '', email: '', active: true, pin: '' },
   { id: '58', name: 'Jaimie Smith', company: 'BIS', department: '', email: '', active: true, pin: '1058' },
   { id: '57', name: "Jordan O'Neil", company: 'BIS', department: '', email: '', active: true, pin: '1057' },
-  { id: 's1779085730232', name: 'Rokas Marciulionis', company: 'BIS', department: '', email: '', active: true, pin: '' },
-  { id: 's1779085708107', name: 'Zonas Petrikauskas', company: 'BIS', department: '', email: '', active: true, pin: '' },
-  // BSS
+  { id: 's1779085708108', name: 'Mantas Gabaris', company: 'BIS', department: '', email: '', active: true, pin: '' },
+  // BSS (20)
   { id: '67', name: 'Andesar Kurti', company: 'BSS', department: '', email: '', active: true, pin: '1067' },
   { id: '62', name: 'Andriy Degtyar', company: 'BSS', department: '', email: '', active: true, pin: '1062' },
   { id: '78', name: 'Anton Kostychencko', company: 'BSS', department: '', email: '', active: true, pin: '1078' },
   { id: '66', name: 'Artur Palonek', company: 'BSS', department: '', email: '', active: true, pin: '1066' },
   { id: '71', name: 'Daniel Bronowicki', company: 'BSS', department: '', email: '', active: true, pin: '1071' },
-  { id: '64', name: 'Giorgi Tchigitashvli', company: 'BSS', department: '', email: '', active: true, pin: '1064' },
   { id: '75', name: 'Hubert Kostecki', company: 'BSS', department: '', email: '', active: true, pin: '1075' },
   { id: '77', name: 'Irina Ciobanu', company: 'BSS', department: '', email: '', active: true, pin: '1077' },
   { id: '61', name: 'J.P Farrell', company: 'BSS', department: '', email: '', active: true, pin: '1061' },
+  { id: 's1781182972154', name: 'James Flaherty', company: 'BSS', department: '', email: '', active: true, pin: '' },
   { id: '73', name: 'Joseph Carribine', company: 'BSS', department: '', email: '', active: true, pin: '1073' },
   { id: '98', name: 'Levi Kochadze', company: 'BSS', department: '', email: '', active: true, pin: '' },
   { id: '79', name: 'Mark Kelly', company: 'BSS', department: '', email: '', active: true, pin: '1079' },
@@ -28,53 +28,60 @@ const initialStaff = [
   { id: '60', name: 'Patryk Myklasz', company: 'BSS', department: '', email: '', active: true, pin: '1060' },
   { id: '80', name: 'Pavol Brezina', company: 'BSS', department: '', email: '', active: true, pin: '1080' },
   { id: '76', name: 'Pawel Burzynski', company: 'BSS', department: '', email: '', active: true, pin: '1076' },
+  { id: 's1779086200003', name: 'Renek Konieczka', company: 'BSS', department: '', email: '', active: true, pin: '' },
   { id: '65', name: 'Shota Marukashvli', company: 'BSS', department: '', email: '', active: true, pin: '1065' },
   { id: '74', name: 'Stephen Nolan', company: 'BSS', department: '', email: '', active: true, pin: '1074' },
-  // C.Real
+  { id: 's1781183001308', name: 'Tamar Jalagania', company: 'BSS', department: '', email: '', active: true, pin: '' },
+  // C.Real (7)
   { id: '94', name: 'Andrew Phiri', company: 'C.Real', department: '', email: '', active: true, pin: '1094' },
-  { id: '95', name: 'Ciril Royiz', company: 'C.Real', department: '', email: '', active: true, pin: '1095' },
+  { id: 's1779085800001', name: 'Christopher Cole', company: 'C.Real', department: '', email: '', active: true, pin: '' },
+  { id: '95', name: 'Ciril Rogic', company: 'C.Real', department: '', email: '', active: true, pin: '1095' },
   { id: '91', name: 'Ernest Mukula', company: 'C.Real', department: '', email: '', active: true, pin: '1091' },
-  { id: 's1776670549394', name: 'Frank Jeffrey ', company: 'C.Real', department: '', email: '', active: true, pin: '' },
-  { id: '104', name: 'Innoccent Ubiaia', company: 'C.Real', department: '', email: '', active: true, pin: '' },
-  { id: '105', name: 'Kieran Conlan', company: 'C.Real', department: '', email: '', active: true, pin: '' },
+  { id: 's1776670549394', name: 'Frank Jeffrey', company: 'C.Real', department: '', email: '', active: true, pin: '' },
   { id: '92', name: 'Serge Katandza', company: 'C.Real', department: '', email: '', active: true, pin: '1092' },
   { id: '96', name: 'Taiye Ajenipu', company: 'C.Real', department: '', email: '', active: true, pin: '1096' },
-  // EMS
+  // EMS (1)
   { id: '90', name: 'Adam Menzel', company: 'EMS', department: '', email: '', active: true, pin: '1090' },
-  // Farley
+  // Farley (11)
+  { id: 's1779085676545', name: 'Aleksandr Lapin', company: 'Farley', department: '', email: '', active: true, pin: '' },
   { id: '11', name: 'Blaz Maratovic', company: 'Farley', department: '', email: '', active: true, pin: '1011' },
   { id: '20', name: 'Dalibor Barasic', company: 'Farley', department: '', email: '', active: true, pin: '1020' },
   { id: '17', name: 'Daniel Dobrogorski', company: 'Farley', department: '', email: '', active: true, pin: '1017' },
   { id: '15', name: 'Eddie Guidera', company: 'Farley', department: '', email: '', active: true, pin: '1015' },
   { id: '21', name: 'Mark Lodge', company: 'Farley', department: '', email: '', active: true, pin: '1021' },
-  { id: 's1779085676545', name: 'Aleksandr Lapin', company: 'Farley', department: '', email: '', active: true, pin: '' },
-  { id: '22', name: 'Martynaz Vitkauskas', company: 'Farley', department: '', email: '', active: true, pin: '1022' },
-  { id: '14', name: "Mick O'Brien", company: 'Farley', department: '', email: '', active: true, pin: '1014' },
+  { id: 's1779086200004', name: "Mick O'Brien", company: 'Farley', department: '', email: '', active: true, pin: '' },
   { id: '13', name: "Paddy O'Connor", company: 'Farley', department: '', email: '', active: true, pin: '1013' },
   { id: '16', name: "Paul O'Brien", company: 'Farley', department: '', email: '', active: true, pin: '1016' },
   { id: '12', name: 'Stjepan Maratovic', company: 'Farley', department: '', email: '', active: true, pin: '1012' },
   { id: '18', name: 'Vitali Majura', company: 'Farley', department: '', email: '', active: true, pin: '1018' },
-  // Montpro
+  // Montpro (14)
   { id: '23', name: 'Aljaz Prosenc', company: 'Montpro', department: '', email: '', active: true, pin: '1023' },
   { id: '26', name: 'Andrej Benulic', company: 'Montpro', department: '', email: '', active: true, pin: '1026' },
-  { id: '30', name: 'Boris Debevec', company: 'Montpro', department: '', email: '', active: true, pin: '1030' },
+  { id: 's1779086200001', name: 'August Borko', company: 'Montpro', department: '', email: '', active: true, pin: '' },
   { id: '29', name: 'Borut Siraj', company: 'Montpro', department: '', email: '', active: true, pin: '1029' },
-  { id: '37', name: 'Denis Doaga', company: 'Montpro', department: '', email: '', active: true, pin: '1037' },
   { id: '28', name: 'Franc Marvin', company: 'Montpro', department: '', email: '', active: true, pin: '1028' },
+  { id: 's1779090848627', name: 'Goran Milicic', company: 'Montpro', department: '', email: '', active: true, pin: '' },
   { id: '34', name: 'Mario Krizanac', company: 'Montpro', department: '', email: '', active: true, pin: '1034' },
   { id: '31', name: 'Matjaz Kokot', company: 'Montpro', department: '', email: '', active: true, pin: '1031' },
   { id: '27', name: 'Matjaz Koritnik', company: 'Montpro', department: '', email: '', active: true, pin: '1027' },
   { id: '25', name: 'Redzep Asani', company: 'Montpro', department: '', email: '', active: true, pin: '1025' },
+  { id: 's1779086200002', name: 'Renato Kovac', company: 'Montpro', department: '', email: '', active: true, pin: '' },
   { id: '24', name: 'Sadik Asani', company: 'Montpro', department: '', email: '', active: true, pin: '1024' },
   { id: '36', name: 'Tomislav Radovan', company: 'Montpro', department: '', email: '', active: true, pin: '1036' },
-  { id: 's1776068334398', name: 'Zolthan S', company: 'Montpro', department: '', email: '', active: true, pin: '' },
-  // Shadow HVAC
+  { id: 's1776068334398', name: 'Zolthan Szucs', company: 'Montpro', department: '', email: '', active: true, pin: '' },
+  // Mor-Air (4)
+  { id: 's1779085800005', name: 'Damien Cleary', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
+  { id: 's1779086030289', name: 'Francis Friary', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
+  { id: 's1779086055644', name: 'Kieran Cummins', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
+  { id: 's1779085800004', name: 'Mark Cleary', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
+  // Shadow HVAC (20)
   { id: '46', name: 'Adrian Walaszewski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1046' },
   { id: '53', name: 'Alan Clarke', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1053' },
   { id: '41', name: 'Arkadiusz Tolak', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1041' },
   { id: '56', name: 'Brian Dobbyn', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1056' },
   { id: '50', name: 'Colin Bolton', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1050' },
-  { id: '101', name: 'Damien Gónolay', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
+  { id: '101', name: 'Damien Goralczyk', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
+  { id: 's1779090960374', name: 'Franciszek Pestka', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
   { id: '44', name: 'Jamie Lawless', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1044' },
   { id: '40', name: 'Karl Lawless', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1040' },
   { id: '38', name: 'Karl Sheldreck', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1038' },
@@ -84,13 +91,11 @@ const initialStaff = [
   { id: 's1776670524923', name: 'Luke Barrett', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '' },
   { id: '54', name: 'Neil Murphy', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1054' },
   { id: '42', name: 'Piotr Kozlowski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1042' },
-  { id: '48', name: 'Przemyslaw Szymanczak', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1048' },
-  { id: '55', name: 'Robert Celinski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1055' },
   { id: '49', name: 'Seamus Dowdall', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1049' },
   { id: '43', name: 'Thomas Dowdall', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1043' },
   { id: '39', name: 'Tony Stephens', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1039' },
   { id: '47', name: 'Wojciech Grabowski', company: 'Shadow HVAC', department: '', email: '', active: true, pin: '1047' },
-  // Troisy
+  // Troisy (9)
   { id: '85', name: 'Adam Jankowski', company: 'Troisy', department: '', email: '', active: true, pin: '1085' },
   { id: '83', name: 'Damian Lagosz', company: 'Troisy', department: '', email: '', active: true, pin: '1083' },
   { id: '82', name: 'Dominik Lagosz', company: 'Troisy', department: '', email: '', active: true, pin: '1082' },
@@ -100,16 +105,6 @@ const initialStaff = [
   { id: '81', name: 'Rafal Gajda', company: 'Troisy', department: '', email: '', active: true, pin: '1081' },
   { id: '87', name: 'Sebastian Nowak', company: 'Troisy', department: '', email: '', active: true, pin: '1087' },
   { id: '88', name: 'Tomasz Kalinowski', company: 'Troisy', department: '', email: '', active: true, pin: '1088' },
-
-  // DNW
-  { id: 's1779085617350', name: 'Gregorz Rudnik', company: 'DNW', department: '', email: '', active: true, pin: '' },
-  { id: 's1779085638417', name: 'Davit Guzarauli', company: 'DNW', department: '', email: '', active: true, pin: '' },
-  { id: 's1779085649683', name: 'Nino Hardi', company: 'DNW', department: '', email: '', active: true, pin: '' },
-
-  // Mor-Air
-  { id: 's1779086030289', name: 'Francis Friary', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
-  { id: 's1779086055644', name: 'Kieran Cummins', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
-  { id: 's1779086145222', name: 'Rory Daly', company: 'Mor-Air', department: '', email: '', active: true, pin: '' },
 ];
 
 const getDateStr = (d) => {
@@ -3843,6 +3838,10 @@ const buildA1WallSigningSheetPDF = ({ companies, peopleByCompany, weekDates }) =
   const sectionTitleH = 12;
   const rowH = 10;
   const gapH = 10;
+  const wallNameFont = 16;
+  const isEddieGuidera = (name) =>
+    String(name || '').trim().toLowerCase() === 'eddie guidera';
+  const personRowH = (p) => (isEddieGuidera(p.name) ? rowH * 2 : rowH);
 
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const fmtDayMonth = (dateStr) => {
@@ -3928,7 +3927,11 @@ const buildA1WallSigningSheetPDF = ({ companies, peopleByCompany, weekDates }) =
     const people = peopleByCompany.get(company) || [];
     if (people.length === 0) continue;
 
-    const sectionH = sectionTitleH + (headerH1 + headerH2) + people.length * rowH + gapH;
+    const sectionH =
+      sectionTitleH +
+      (headerH1 + headerH2) +
+      people.reduce((sum, p) => sum + personRowH(p), 0) +
+      gapH;
     if (y + sectionH > PH - MB) {
       pageNum += 1;
       y = newPage();
@@ -3951,32 +3954,47 @@ const buildA1WallSigningSheetPDF = ({ companies, peopleByCompany, weekDates }) =
     y += headerH1 + headerH2;
 
     // rows
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(16); // larger names for wall visibility
     doc.setTextColor(30, 41, 59);
     doc.setDrawColor(148, 163, 184);
     doc.setLineWidth(0.2);
 
     people.forEach((p, idx) => {
+      const thisRowH = personRowH(p);
+      const isEddie = isEddieGuidera(p.name);
       const isAlt = idx % 2 === 1;
       if (isAlt) {
         doc.setFillColor(248, 250, 252);
-        doc.rect(x0, y, contentW, rowH, 'F');
+        doc.rect(x0, y, contentW, thisRowH, 'F');
       }
 
       let x = x0;
-      doc.rect(x, y, nameW, rowH);
-      doc.text(String(p.name || ''), x + 3, y + rowH * 0.7);
+      doc.rect(x, y, nameW, thisRowH);
+      const name = String(p.name || '');
+      const nameX = x + 3;
+      const nameY = y + thisRowH * 0.7;
+      if (isEddie) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(wallNameFont * 2);
+        doc.text(name, nameX, nameY);
+        const nameW_mm = doc.getTextWidth(name);
+        doc.setLineWidth(0.35);
+        doc.line(nameX, nameY + 0.9, nameX + nameW_mm, nameY + 0.9);
+        doc.setLineWidth(0.2);
+      } else {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(wallNameFont);
+        doc.text(name, nameX, nameY);
+      }
       x += nameW;
 
       weekDates.forEach(() => {
-        doc.rect(x, y, inW, rowH);
-        doc.rect(x + inW, y, outW, rowH);
-        doc.rect(x + inW + outW, y, initW, rowH);
+        doc.rect(x, y, inW, thisRowH);
+        doc.rect(x + inW, y, outW, thisRowH);
+        doc.rect(x + inW + outW, y, initW, thisRowH);
         x += dayBlockW;
       });
 
-      y += rowH;
+      y += thisRowH;
     });
 
     y += gapH;
